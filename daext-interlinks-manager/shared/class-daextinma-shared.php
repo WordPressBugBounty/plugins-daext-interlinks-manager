@@ -32,7 +32,7 @@ class Daextinma_Shared {
 	private function __construct() {
 
 		$this->data['slug'] = 'daextinma';
-		$this->data['ver']  = '1.14';
+		$this->data['ver']  = '1.15';
 		$this->data['dir']  = substr( plugin_dir_path( __FILE__ ), 0, -7 );
 		$this->data['url']  = substr( plugin_dir_url( __FILE__ ), 0, -7 );
 
@@ -121,28 +121,9 @@ class Daextinma_Shared {
 		// Remove script tags.
 		$text = $this->remove_script_tags( $text );
 
-		/*
-		 * Get the website url and escape the regex character. # and
-		 * whitespace ( used with the 'x' modifier ) are not escaped, thus
-		 * should not be included in the $site_url string
-		 */
-		$site_url = preg_quote( get_home_url() );
-
 		// Working regex.
 		$num_matches = preg_match_all(
-			'{
-            <a                      #1 Match the element a start-tag
-            [^>]+                   #2 Match everything except > for at least one time
-            href\s*=\s*             #3 Equal may have whitespaces on both sides
-            ([\'"]?)                #4 Match double quotes, single quote or no quote ( captured for the backreference \1 )
-            ' . $site_url . '       #5 The site URL ( Scheme and Domain )
-            [^\'">\s]+              #6 The rest of the URL ( Path and/or File )
-            (\1)                    #7 Backreference that matches the href value delimiter matched at line 4
-            [^>]*                   #8 Any character except > zero or more times
-            >                       #9 End of the start-tag
-            .*?                     #10 Link text or nested tags. After the dot ( enclose in parenthesis ) negative lookbehinds can be applied to avoid specific stuff inside the link text or nested tags. Example with single negative lookbehind (.(?<!word1))*? Example with multiple negative lookbehind (.(?<!word1)(?<!word2)(?<!word3))*?
-            <\/a\s*>                #11 Element a end-tag with optional white-spaces characters before the >
-            }ix',
+			$this->internal_links_regex(),
 			$text,
 			$matches
 		);
@@ -330,17 +311,7 @@ class Daextinma_Shared {
 		$s = $this->remove_script_tags( $s );
 
 		$num_matches = preg_match_all(
-			'{<a                                #1 Begin the element a start-tag
-            [^>]+                               #2 Any character except > at least one time
-            href\s*=\s*                         #3 Equal may have whitespaces on both sides
-            ([\'"]?)                            #4 Match double quotes, single quote or no quote ( captured for the backreference \1 )
-            [^\'">\s]+                          #5 The site URL
-            \1                                  #6 Backreference that matches the href value delimiter matched at line 4     
-            [^>]*                               #7 Any character except > zero or more times
-            >                                   #8 End of the start-tag
-            .*?                                 #9 Link text or nested tags. After the dot ( enclose in parenthesis ) negative lookbehinds can be applied to avoid specific stuff inside the link text or nested tags. Example with single negative lookbehind (.(?<!word1))*? Example with multiple negative lookbehind (.(?<!word1)(?<!word2)(?<!word3))*?
-            <\/a\s*>                            #10 Element a end-tag with optional white-spaces characters before the >
-            }ix',
+			$this->links_regex(),
 			$s,
 			$matches
 		);
@@ -1584,28 +1555,11 @@ class Daextinma_Shared {
 			$post_content = $this->remove_script_tags( $post_content );
 
 			/**
-			 * Get the website url and quote and escape the regex character. # and
-			 * whitespace ( used with the 'x' modifier ) are not escaped, thus
-			 * should not be included in the $site_url string.
-			 */
-			$site_url = preg_quote( get_home_url(), '/' );
-
-			/**
 			 * Find all the manual and auto interlinks matches with a regular
 			 * expression and add them in the $juice_a array.
 			 */
 			preg_match_all(
-				'{<a                                #1 Begin the element a start-tag
-                [^>]+                               #2 Any character except > at least one time
-                href\s*=\s*                         #3 Equal may have whitespaces on both sides
-                ([\'"]?)                            #4 Match double quotes, single quote or no quote ( captured for the backreference \1 )
-                (' . $site_url . '[^\'">\s]* )      #5 The site URL ( Scheme and Domain ) and the rest of the URL ( Path and/or File ) ( captured )
-                \1                                  #6 Backreference that matches the href value delimiter matched at line 4     
-                [^>]*                               #7 Any character except > zero or more times
-                >                                   #8 End of the start-tag
-                (.*?)                               #9 Link text or nested tags. After the dot ( enclose in parenthesis ) negative lookbehinds can be applied to avoid specific stuff inside the link text or nested tags. Example with single negative lookbehind (.(?<!word1))*? Example with multiple negative lookbehind (.(?<!word1)(?<!word2)(?<!word3))*?
-                <\/a\s*>                            #10 Element a end-tag with optional white-spaces characters before the >
-                }ix',
+				$this->internal_links_regex(),
 				$post_content,
 				$matches,
 				PREG_OFFSET_CAPTURE
@@ -1619,7 +1573,7 @@ class Daextinma_Shared {
 				$link_position = $matches[0][ $key ][1];
 
 				// save the captured URL.
-				$url = $single_capture[0];
+				$url = $this->relative_to_absolute_url( $single_capture[0], $single_post['ID'] );
 
 				/**
 				 * Remove link to anchor from the URL ( if enabled through the
@@ -1908,6 +1862,215 @@ class Daextinma_Shared {
 		$average_juice = round( $average_juice, 1 );
 
 		return $average_juice;
+	}
+
+	/**
+	 * Converts relative URLs to absolute URLs.
+	 *
+	 * The following type of URLs are supported:
+	 *
+	 * - Absolute URLs | E.g., "https://example.com/post/"
+	 * - Protocol-relative URLs | E.g., "//localhost/image.jpg".
+	 * - Root-relative URLs | E.g., "/post/".
+	 * - Fragment-only URLs | E.g., "#section1".
+	 * - Relative URLs with relative paths. | E.g., "./post/", "../post", "../../post".
+	 * - Page-relative URLs | E.g., "post/".
+	 *
+	 * @param String $relative_url The relative URL that should be converted.
+	 * @param Int $post_id The ID of the post.
+	 *
+	 * @return mixed|string
+	 */
+	public function relative_to_absolute_url( $relative_url, $post_id ) {
+
+		$post_permalink = get_permalink( $post_id );
+
+		/**
+		 * If already an absolute URL, return as is.
+		 *
+		 * -------------------------------------------------------------------------------------------------------------
+		 */
+		if ( empty( $relative_url ) || wp_parse_url( $relative_url, PHP_URL_SCHEME ) ) {
+			return $relative_url;
+		}
+
+		// Get the site URL. Ensure trailing slash for proper resolution.
+		$base_url = home_url( '/' );
+
+		// Parse base URL.
+		$base_parts = wp_parse_url( $base_url );
+
+		/**
+		 * Protocol-relative URL | If it's a protocol-relative URL (e.g., //example.com/image.jpg), add "https:" as
+		 * default.
+		 *
+		 * -------------------------------------------------------------------------------------------------------------
+		 */
+		if ( str_starts_with( $relative_url, '//' ) ) {
+			if ( $this->is_site_using_https() ) {
+				return 'https:' . $relative_url;
+			} else {
+				return 'http:' . $relative_url;
+			}
+		}
+
+		/**
+		 * Root-relative URLs | Handle root-relative URLs (e.g., "/some-page/").
+		 *
+		 * -------------------------------------------------------------------------------------------------------------
+		 */
+		if ( str_starts_with( $relative_url, '/' ) ) {
+			return $base_parts['scheme'] . '://' . $base_parts['host'] . $relative_url;
+		}
+
+		/**
+		 * Fragment identifier | Handle fragment-only URLs (e.g., "#section").
+		 *
+		 * -------------------------------------------------------------------------------------------------------------
+		 */
+		if ( str_starts_with( $relative_url, '#' ) ) {
+			return $post_permalink . $relative_url;
+		}
+
+		/**
+		 * Relative URLs with relative paths.
+		 *
+		 * Handles the relative URLs with relative paths like "./page", "../page", and "../../page'.
+		 *
+		 * Check if the relative URLs starts with "./", or "../", or subsequent levels like "../../".
+		 * If it does, use the exact relative URL to retrieve and return the absolute URL.
+		 *
+		 * -------------------------------------------------------------------------------------------------------------
+		 */
+
+		// This conditional supports all the levels like '../../', etc.
+		if ( str_starts_with( $relative_url, './' ) || str_starts_with( $relative_url, '../' ) ) {
+
+			/**
+			 * Here, based on the type of relative URL, we move up one or more levels in the directory tree
+			 * to create the correct absolute URL.
+			 *
+			 * Note that the URL on which we should move levels is stored in the $current_url variable.
+			 */
+			$post_permalink_parts = wp_parse_url( $post_permalink );
+
+			// Ensure we have a valid base URL.
+			if ( ! isset( $post_permalink_parts['scheme'], $post_permalink_parts['host'], $post_permalink_parts['path'] ) ) {
+				return $relative_url; // Return as-is if current URL is invalid.
+			}
+
+			// Get the directory of the current URL.
+			$base_path = rtrim( $post_permalink_parts['path'], '/' );
+
+			// Split the base path into segments.
+			$base_parts = explode( '/', $base_path );
+
+			// Split the relative URL into segments.
+			$relative_parts = explode( '/', $relative_url );
+
+			// Process the relative path.
+			foreach ( $relative_parts as $part ) {
+				if ( '..' === $part ) {
+					// Move up one directory level.
+					if ( count( $base_parts ) > 1 ) {
+						array_pop( $base_parts );
+					}
+				} elseif ( '.' !== $part && '' !== $part ) {
+					// Append valid segments.
+					$base_parts[] = $part;
+				}
+			}
+
+			// If there is a trailing slash in the permalink add it to the $trailing_slash string.
+			$trailing_slash = str_ends_with( $relative_url, '/' ) ? '/' : '';
+
+			// Construct the final absolute URL and return it.
+			return $post_permalink_parts['scheme'] . '://' . $post_permalink_parts['host'] . implode( '/', $base_parts ) . $trailing_slash;
+
+		}
+
+		/**
+		 * Page-relative URLs.
+		 *
+		 * Handle relative URLs without a leading slash (page-relative URLs like "example-post/").
+		 */
+		$base_parts = wp_parse_url( $post_permalink );
+		return $base_parts['scheme'] . '://' . $base_parts['host'] . $base_parts['path'] . $relative_url;
+
+	}
+
+	/**
+	 * A regex to match internal links. Specifically absolute internal links and relative internal links.
+	 *
+	 * @return string The regex to match manual and auto internal links.
+	 */
+	public function internal_links_regex() {
+
+		/**
+		 * Get the website URL and escape the regex character. # and
+		 * whitespace ( used with the 'x' modifier ) are not escaped, thus
+		 * should not be included in the $site_url string
+		 */
+		$site_url = preg_quote( get_home_url(), '{' );
+
+		// Get the website URL without the protocol part.
+		$site_url_without_protocol_part = preg_quote( wp_parse_url( get_home_url(), PHP_URL_HOST ), '{' );
+
+		return '{<a                                                     #1 Begin the element a start-tag
+            [^>]+                                                       #2 Any character except > at least one time
+            href\s*=\s*                                                 #3 Equal may have whitespaces on both sides
+            ([\'"]?)                                                    #4 Match double quotes, single quote or no quote ( captured for the backreference \1 )
+	        (                                                           #5 Capture group for both full and relative URLs
+	            (?:' . $site_url . '[^\'">\s]*)                         #5a Match full URL starting with $site_url ( captured )
+	            |                                                       # OR
+	            (?!//)(?:\/|\.{1,2}\/)[^\'">\s]*                        #5b Match relative URLs (must start with /, ./, or ../) ( captured )
+	                        |                                           # OR
+                \#[^\'">\s]*                                            #5c Match fragment-only URLs (e.g., #section2) ( captured )
+                            |                                           # OR
+				(?!//)[^\'"\s<>:]+                                      #5d Match page-relative URLs (must not contain "://") (captured)
+				|                                                       # OR
+                (?://' . $site_url_without_protocol_part . '[^\'">\s]*) #5e Match protocol-relative URLs with $site_url_without_protocol_part (captured)
+	        )    
+            \1                                                          #6 Backreference that matches the href value delimiter matched at line 4
+            [^>]*                                                       #7 Any character except > zero or more times
+            >                                                           #8 End of the start-tag
+            (.*?)                                                       #9 Link text or nested tags. After the dot ( enclose in parenthesis ) negative lookbehinds can be applied to avoid specific stuff inside the link text or nested tags. Example with single negative lookbehind (.(?<!word1))*? Example with multiple negative lookbehind (.(?<!word1)(?<!word2)(?<!word3))*?
+            <\/a\s*>                                                    #10 Element a end-tag with optional white-spaces characters before the >
+            }ix';
+	}
+
+	/**
+	 * A regex to match any link (internal links, external links, and relative links).
+	 *
+	 * @return string The regex to match manual and auto internal links.
+	 */
+	public function links_regex() {
+
+		return '{<a                             #1 Begin the element a start-tag
+            [^>]+                               #2 Any character except > at least one time
+            href\s*=\s*                         #3 Equal may have whitespaces on both sides
+            ([\'"]?)                            #4 Match double quotes, single quote or no quote ( captured for the backreference \1 )
+            [^\'">\s]+                          #5 The site URL
+            \1                                  #6 Backreference that matches the href value delimiter matched at line 4     
+            [^>]*                               #7 Any character except > zero or more times
+            >                                   #8 End of the start-tag
+            .*?                                 #9 Link text or nested tags. After the dot ( enclose in parenthesis ) negative lookbehinds can be applied to avoid specific stuff inside the link text or nested tags. Example with single negative lookbehind (.(?<!word1))*? Example with multiple negative lookbehind (.(?<!word1)(?<!word2)(?<!word3))*?
+            <\/a\s*>                            #10 Element a end-tag with optional white-spaces characters before the >
+            }ix';
+
+	}
+
+	/**
+	 * Checks if the WordPress site URL is using the HTTPS protocol.
+	 *
+	 * @return bool Returns true if the site URL starts with https:// (i.e., the site is using HTTPS). false if the site
+	 * URL does not start with https:// (i.e., the site is using HTTP).
+	 */
+	public function is_site_using_https() {
+
+		$site_url = get_option( 'siteurl' );
+
+		return ( str_starts_with( $site_url, 'https://' ) );
 	}
 
 }
