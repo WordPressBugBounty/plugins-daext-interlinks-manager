@@ -3,9 +3,9 @@ Contributors: DAEXT
 Tags: internal linking, link building, seo, orphan content, links
 Donate link: https://daext.com
 Requires at least: 4.6
-Tested up to: 6.7.2
+Tested up to: 6.8
 Requires PHP: 5.3
-Stable tag: 1.15
+Stable tag: 1.16
 License: GPLv3
 
 Interlinks Manager is an SEO WordPress plugin that gives you the ability to monitor and optimize your internal links.
@@ -118,6 +118,14 @@ With this procedure you will be able to perform a **Single Site Activation** in 
 The plugin works with the Gutenberg editor. However, it might not find all the internal links with page builders that don't save the post HTML in the **[prefix]_posts** database table.
 
 == Changelog ==
+
+= 1.16 =
+
+*Apr 21, 2025*
+
+* Fixed PHP notice caused by early use of translation functions.
+* Fixed JavaScript deprecation notices for back-end functionality.
+* Fixed minor bug in toolbar menu.
 
 = 1.15 =
 

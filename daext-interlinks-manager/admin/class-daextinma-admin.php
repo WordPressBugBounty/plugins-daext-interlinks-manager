@@ -79,6 +79,30 @@ class Daextinma_Admin {
 		// This hook is triggered during the deletion of a blog.
 		add_action( 'delete_blog', array( $this, 'delete_blog_delete_options_and_tables' ), 10, 1 );
 
+		// Require and instantiate the classes used to handle the menus.
+		add_action( 'init', array( $this, 'handle_menus' ) );
+
+	}
+
+	/**
+	 * Return an istance of this class.
+	 */
+	public static function get_instance() {
+
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+
+		return self::$instance;
+	}
+
+	/**
+	 * If we are in one of the plugin back-end menus require and instantiate the class used to handle the specific menu.
+	 *
+	 * @return void
+	 */
+	public function handle_menus() {
+
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce non-necessary for menu selection.
 		$page_query_param = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : null;
 
@@ -104,7 +128,7 @@ class Daextinma_Admin {
 							'link_text' => __( 'Options', 'daext-interlinks-manager' ),
 							'link_url'  => admin_url( 'admin.php?page=daextinma-options' ),
 							'icon'      => 'settings-01',
-							'menu_slug' => 'daextinma-http-status',
+							'menu_slug' => 'daextinma-options',
 						),
 					),
 					'more_items' => array(
@@ -169,18 +193,7 @@ class Daextinma_Admin {
 				$this->menu_elements = new Daextinma_Options_Menu_Elements( $this->shared, $page_query_param, $config );
 			}
 		}
-	}
 
-	/**
-	 * Return an istance of this class.
-	 */
-	public static function get_instance() {
-
-		if ( null === self::$instance ) {
-			self::$instance = new self();
-		}
-
-		return self::$instance;
 	}
 
 	/**

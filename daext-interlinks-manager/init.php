@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Interlinks Manager
  * Description: Manages the internal links of your WordPress website. (Lite Version)
- * Version: 1.15
+ * Version: 1.16
  * Author: DAEXT
  * Author URI: https://daext.com
  * Text Domain: daext-interlinks-manager
