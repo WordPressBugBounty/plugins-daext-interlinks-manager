@@ -1,0 +1,37 @@
+/* General ---------------------------------------------------------------------------------------------------------- */
+.daext-display-none {
+    display: none;
+}
+
+/* Interlinks Optimization Meta Box */
+
+#daextinma-meta-optimization .inside{
+    margin: 0;
+    padding-bottom: 16px;
+}
+
+#daextinma-meta-optimization .form-table{
+    margin-top: 0;
+    padding-top: 16px;
+}
+
+#daextinma-meta-optimization td{
+    padding-bottom: 0;
+    padding-top: 16px;
+}
+
+#daextinma-meta-optimization p{
+    font-size: 13px;
+    line-height: 1.4em;
+    margin-top: 0;
+}
+
+#daextinma-meta-optimization p:not(:last-of-type){
+    margin-bottom: 16px;
+}
+
+/* Interlinks Options block */
+.daextinma-interlinks-options-custom-margin {
+    margin-bottom: 16px !important;
+}
+/* Interlinks Options block - end */

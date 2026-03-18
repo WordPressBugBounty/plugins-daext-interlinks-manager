@@ -276,7 +276,7 @@ const App = () => {
             method: 'POST'
         }).then(response => {
 
-                downloadFileFromString(response.csv_content, 'juice');
+                downloadFileFromString(response.csv_content, 'link-equity');
 
             },
         );
@@ -305,7 +305,7 @@ const App = () => {
                                                 <div className={'statistic-value'}>{statistics.allPosts}</div>
                                                 <div className={'statistic-label'}>{__('Average IIL', 'daext-interlinks-manager')}:</div>
                                                 <div className={'statistic-value'}>{statistics.averageMil}</div>
-                                                <div className={'statistic-label'}>{__('Average Juice', 'daext-interlinks-manager')}:</div>
+                                                <div className={'statistic-label'}>{__('Average Equity', 'daext-interlinks-manager')}:</div>
                                                 <div className={'statistic-value'}>{statistics.averageAil}</div>
                                             </div>
                                             <div className={'tools-actions'}>

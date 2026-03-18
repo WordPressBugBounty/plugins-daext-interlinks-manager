@@ -45,7 +45,7 @@ const Chart = (props) => {
                 <tr>
                     <th>{__('Post', 'daext-interlinks-manager')}</th>
                     <th>{__('Anchor Text', 'daext-interlinks-manager')}</th>
-                    <th>{__('Juice', 'daext-interlinks-manager')}</th>
+                    <th>{__('Link Equity', 'daext-interlinks-manager')}</th>
                 </tr>
                 </thead>
                 <tbody>

@@ -32,7 +32,7 @@ class Daextinma_Shared {
 	private function __construct() {
 
 		$this->data['slug'] = 'daextinma';
-		$this->data['ver']  = '1.16';
+		$this->data['ver']  = '1.17';
 		$this->data['dir']  = substr( plugin_dir_path( __FILE__ ), 0, -7 );
 		$this->data['url']  = substr( plugin_dir_url( __FILE__ ), 0, -7 );
 
@@ -44,6 +44,9 @@ class Daextinma_Shared {
 
 			// Options version. (not available in the options UI).
 			$this->get( 'slug' ) . '_options_version'     => '0',
+
+			// Feature usage tracking (not available in options UI).
+			$this->get( 'slug' ) . '_analysis_runs' => 0,
 
 			/**
 			 * Internal links data and juice data last update. Used for the automatic data update in the Dashboard and
@@ -494,10 +497,9 @@ class Daextinma_Shared {
 		$number_of_manual_interlinks        = $this->get_manual_interlinks( $post->post_content );
 		$total_number_of_interlinks         = $number_of_manual_interlinks;
 		if ( $total_number_of_interlinks >= $suggested_min_number_of_interlinks && $total_number_of_interlinks <= $suggested_max_number_of_interlinks ) {
-			echo '<p>' . esc_html__( 'The number of internal links included in this post is optimized.', 'daext-interlinks-manager' ) . '</p>';
+			echo '<p>' . esc_html__( 'The number of internal links in this post is within the recommended range.', 'daext-interlinks-manager' ) . '</p>';
 		} else {
-			echo '<p>' . esc_html__( 'Please optimize the number of internal links.', 'daext-interlinks-manager' ) . '</p>';
-			echo '<p>' . esc_html__( 'This post currently has', 'daext-interlinks-manager' ) . '&nbsp' . esc_html( $total_number_of_interlinks ) . '&nbsp' . esc_html(
+			echo '<p>' . esc_html__( 'This post currently contains', 'daext-interlinks-manager' ) . '&nbsp' . esc_html( $total_number_of_interlinks ) . '&nbsp' . esc_html(
 				_n(
 					'internal link',
 					'internal links',
@@ -507,9 +509,9 @@ class Daextinma_Shared {
 			) . '.&nbsp';
 
 			if ( $suggested_min_number_of_interlinks === $suggested_max_number_of_interlinks ) {
-				echo esc_html__( 'However, based on the content length and on your options, their number should be', 'daext-interlinks-manager' ) . '&nbsp' . esc_html( $suggested_min_number_of_interlinks ) . '.</p>';
+				echo esc_html__( 'Based on the content length and your settings, the recommended number is', 'daext-interlinks-manager' ) . '&nbsp' . esc_html( $suggested_min_number_of_interlinks ) . '.</p>';
 			} else {
-				echo esc_html__( 'However, based on the content length and on your options, their number should be included between', 'daext-interlinks-manager' ) . '&nbsp' . esc_html( $suggested_min_number_of_interlinks ) . '&nbsp' . esc_html__( 'and', 'daext-interlinks-manager' ) . '&nbsp' . esc_html( $suggested_max_number_of_interlinks ) . '.</p>';
+				echo esc_html__( 'Based on the content length and your settings, the recommended number is between', 'daext-interlinks-manager' ) . '&nbsp' . esc_html( $suggested_min_number_of_interlinks ) . '&nbsp' . esc_html__( 'and', 'daext-interlinks-manager' ) . '&nbsp' . esc_html( $suggested_max_number_of_interlinks ) . '.</p>';
 			}
 		}
 	}
@@ -2071,6 +2073,66 @@ class Daextinma_Shared {
 		$site_url = get_option( 'siteurl' );
 
 		return ( str_starts_with( $site_url, 'https://' ) );
+	}
+
+	/**
+	 * Register the support of the 'custom-fields' to all the post type with UI.
+	 *
+	 * The 'custom-fields' support is required by the sidebar components that use meta data. Without the
+	 * 'custom-fields' support associated with the posts, the following meta data can't be used by the sidebar
+	 * components and a JavaScript error breaks the editor:
+	 *
+	 * - _daim_default_seo_power
+	 * - _daim_enable_ail
+	 *
+	 * Note that the problem solved by this method occurs only when a post type is registered and the "supports" array
+	 * doesn't include the 'custom-fields' value.
+	 *
+	 * See: https://developer.wordpress.org/reference/functions/add_post_type_support/
+	 */
+	public function register_support_on_post_types() {
+
+		// Get the post types with UI.
+		$available_post_types_a = get_post_types(
+			array(
+				'show_ui' => true,
+			)
+		);
+
+		// Remove the 'attachment' post type.
+		$available_post_types_a = array_diff( $available_post_types_a, array( 'attachment' ) );
+
+		// Add the 'custom-fields' support to the post types with UI.
+		foreach ( $available_post_types_a as $available_post_type ) {
+			add_post_type_support( $available_post_type, 'custom-fields' );
+		}
+	}
+
+	/**
+	 * Get an array with the post types with UI except the attachment post type.
+	 *
+	 * @return Array
+	 */
+	public function get_post_types_with_ui() {
+
+		// Get all the post types with UI.
+		$args               = array(
+			'public'  => true,
+			'show_ui' => true,
+		);
+		$post_types_with_ui = get_post_types( $args );
+
+		// Remove the attachment post type.
+		unset( $post_types_with_ui['attachment'] );
+
+		// Replace the associative index with a numeric index.
+		$temp_array = array();
+		foreach ( $post_types_with_ui as $key => $value ) {
+			$temp_array[] = $value;
+		}
+		$post_types_with_ui = $temp_array;
+
+		return $post_types_with_ui;
 	}
 
 }

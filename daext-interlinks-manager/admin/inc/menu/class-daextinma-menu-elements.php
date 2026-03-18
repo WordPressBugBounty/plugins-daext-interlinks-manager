@@ -403,10 +403,11 @@ class Daextinma_Menu_Elements {
 		// Display the Header Bar.
 		$this->header_bar();
 
+		// Allow the PluginNoticesManager class to add a notice below the header bar when needed.
+		do_action( 'daextpnm_after_header_bar' );
+
 		// Custom body content defined in the menu child class.
 		$this->display_custom_content();
 
-		// Display the Pro features section.
-		$this->display_pro_features();
 	}
 }

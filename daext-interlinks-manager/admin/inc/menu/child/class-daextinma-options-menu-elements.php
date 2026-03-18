@@ -59,5 +59,12 @@ class Daextinma_Options_Menu_Elements extends Daextinma_Menu_Elements {
 		</div>
 
 		<?php
+
+		// Display the Pro features section.
+		$this->display_pro_features();
+
+		?>
+
+		<?php
 	}
 }

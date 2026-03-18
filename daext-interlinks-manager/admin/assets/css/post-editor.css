@@ -4,22 +4,30 @@
 }
 
 /* Interlinks Options Meta Box -------------------------------------------------------------------------------------- */
-#daextinma-meta-options .inside {
-    padding: 16px;
-    margin: 0;
-}
-
 #daextinma-meta-options .inside input {
     border-radius: 2px;
-    margin: 8px 0 0 0;
+    margin: 0;
     width: 100%;
+}
+
+.daextinma-seo-power-label-wrapper{
+    margin-bottom: 0.5em;
+}
+
+.daextinma-seo-power-label{
+    vertical-align: baseline;
+    font-weight: 600;
+}
+
+p.daextinma-seo-power-description{
+    margin: 1em 0 6px;
 }
 
 /* Interlinks Optimization Meta Box */
 
 #daextinma-meta-optimization .inside {
     margin: 0;
-    padding: 16px;
+    padding: 12px;
 }
 
 #daextinma-meta-optimization p {

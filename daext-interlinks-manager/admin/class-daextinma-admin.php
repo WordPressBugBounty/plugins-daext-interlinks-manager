@@ -32,7 +32,7 @@ class Daextinma_Admin {
 	private $screen_id_dashboard = null;
 
 	/**
-	 * The screen id of the "Juice" menu.
+	 * The screen id of the "Link Equity" menu.
 	 *
 	 * @var null
 	 */
@@ -119,7 +119,7 @@ class Daextinma_Admin {
 							'menu_slug' => 'daextinma-dashboard',
 						),
 						array(
-							'link_text' => __( 'Juice', 'daext-interlinks-manager' ),
+							'link_text' => __( 'Link Equity', 'daext-interlinks-manager' ),
 							'link_url'  => admin_url( 'admin.php?page=daextinma-juice' ),
 							'icon'      => 'link-03',
 							'menu_slug' => 'daextinma-juice',
@@ -134,42 +134,42 @@ class Daextinma_Admin {
 					'more_items' => array(
 						array(
 							'link_text' => __( 'HTTP Status', 'daext-interlinks-manager' ),
-							'link_url'  => 'https://daext.com/interlinks-manager/',
+							'link_url'  => 'https://daext.com/interlinks-manager/#features',
 							'pro_badge' => true,
 						),
 						array(
 							'link_text' => __( 'Click Tracking', 'daext-interlinks-manager' ),
-							'link_url'  => 'https://daext.com/interlinks-manager/',
+							'link_url'  => 'https://daext.com/interlinks-manager/#features',
 							'pro_badge' => true,
 						),
 						array(
 							'link_text' => __( 'Bulk Actions', 'daext-interlinks-manager' ),
-							'link_url'  => 'https://daext.com/interlinks-manager/',
+							'link_url'  => 'https://daext.com/interlinks-manager/#features',
 							'pro_badge' => true,
 						),
 						array(
 							'link_text' => __( 'Automatic Links', 'daext-interlinks-manager' ),
-							'link_url'  => 'https://daext.com/interlinks-manager/',
+							'link_url'  => 'https://daext.com/interlinks-manager/#features',
 							'pro_badge' => true,
 						),
 						array(
 							'link_text' => __( 'Links Categories', 'daext-interlinks-manager' ),
-							'link_url'  => 'https://daext.com/interlinks-manager/',
+							'link_url'  => 'https://daext.com/interlinks-manager/#features',
 							'pro_badge' => true,
 						),
 						array(
 							'link_text' => __( 'Term Groups', 'daext-interlinks-manager' ),
-							'link_url'  => 'https://daext.com/interlinks-manager/',
+							'link_url'  => 'https://daext.com/interlinks-manager/#features',
 							'pro_badge' => true,
 						),
 						array(
 							'link_text' => __( 'Tools', 'daext-interlinks-manager' ),
-							'link_url'  => 'https://daext.com/interlinks-manager/',
+							'link_url'  => 'https://daext.com/interlinks-manager/#features',
 							'pro_badge' => true,
 						),
 						array(
 							'link_text' => __( 'Maintenance', 'daext-interlinks-manager' ),
-							'link_url'  => 'https://daext.com/interlinks-manager/',
+							'link_url'  => 'https://daext.com/interlinks-manager/#features',
 							'pro_badge' => true,
 						),
 					),
@@ -226,28 +226,39 @@ class Daextinma_Admin {
 
 		}
 
-		/**
-		 * Load the post editor CSS if at least one of the three meta box is
-		 * enabled with the current $screen->id.
-		 */
-		$load_post_editor_css = false;
+		$meta_box_post_types_a = $this->shared->get_post_types_with_ui();
+		if ( in_array( $screen->id, $meta_box_post_types_a, true ) ) {
 
-		$interlinks_options_post_types_a = maybe_unserialize( get_option( $this->shared->get( 'slug' ) . '_interlinks_options_post_types' ) );
-		if ( is_array( $interlinks_options_post_types_a ) && in_array( $screen->id, $interlinks_options_post_types_a, true ) ) {
-			$load_post_editor_css = true;
+			// Ensure we are in the classic editor, not the block editor.
+			if ( ! method_exists( $screen, 'is_block_editor' ) || ! $screen->is_block_editor() ) {
+
+				/**
+				 * Load the post editor CSS if at least one of the two meta box is
+				 * enabled with the current $screen->id.
+				 */
+				$load_post_editor_css = false;
+
+				$interlinks_options_post_types_a = maybe_unserialize( get_option( $this->shared->get( 'slug' ) . '_interlinks_options_post_types' ) );
+				if ( is_array( $interlinks_options_post_types_a ) && in_array( $screen->id, $interlinks_options_post_types_a, true ) ) {
+					$load_post_editor_css = true;
+				}
+
+				$interlinks_optimization_post_types_a = maybe_unserialize( get_option( $this->shared->get( 'slug' ) . '_interlinks_optimization_post_types' ) );
+				if ( is_array( $interlinks_optimization_post_types_a ) && in_array( $screen->id, $interlinks_optimization_post_types_a, true ) ) {
+					$load_post_editor_css = true;
+				}
+
+				if ( $load_post_editor_css ) {
+
+					// Post Editor CSS.
+					wp_enqueue_style( $this->shared->get( 'slug' ) . '-post-editor', $this->shared->get( 'url' ) . 'admin/assets/css/post-editor.css', array(), $this->shared->get( 'ver' ) );
+
+				}
+
+			}
+
 		}
 
-		$interlinks_optimization_post_types_a = maybe_unserialize( get_option( $this->shared->get( 'slug' ) . '_interlinks_optimization_post_types' ) );
-		if ( is_array( $interlinks_optimization_post_types_a ) && in_array( $screen->id, $interlinks_optimization_post_types_a, true ) ) {
-			$load_post_editor_css = true;
-		}
-
-		if ( $load_post_editor_css ) {
-
-			// Post Editor CSS.
-			wp_enqueue_style( $this->shared->get( 'slug' ) . '-post-editor', $this->shared->get( 'url' ) . 'admin/assets/css/post-editor.css', array(), $this->shared->get( 'ver' ) );
-
-		}
 	}
 
 	/**
@@ -348,38 +359,49 @@ class Daextinma_Admin {
 
 		}
 
-		/**
-		 * Load the post editor JS if at least one of the two meta boxes is enabled with the current $screen->id.
-		 */
-		$load_post_editor_js = false;
+		$meta_box_post_types_a = $this->shared->get_post_types_with_ui();
+		if ( in_array( $screen->id, $meta_box_post_types_a, true ) ) {
 
-		$interlinks_options_post_types_a = maybe_unserialize( get_option( $this->shared->get( 'slug' ) . '_interlinks_options_post_types' ) );
-		if ( is_array( $interlinks_options_post_types_a ) && in_array( $screen->id, $interlinks_options_post_types_a, true ) ) {
-			$load_post_editor_js = true;
+			// Ensure we are in the classic editor, not the block editor.
+			if ( ! method_exists( $screen, 'is_block_editor' ) || ! $screen->is_block_editor() ) {
+
+				/**
+				 * Load the post editor JS if at least one of the two meta boxes is enabled with the current $screen->id.
+				 */
+				$load_post_editor_js = false;
+
+				$interlinks_options_post_types_a = maybe_unserialize( get_option( $this->shared->get( 'slug' ) . '_interlinks_options_post_types' ) );
+				if ( is_array( $interlinks_options_post_types_a ) && in_array( $screen->id, $interlinks_options_post_types_a, true ) ) {
+					$load_post_editor_js = true;
+				}
+
+				$interlinks_optimization_post_types_a = maybe_unserialize( get_option( $this->shared->get( 'slug' ) . '_interlinks_optimization_post_types' ) );
+				if ( is_array( $interlinks_optimization_post_types_a ) && in_array( $screen->id, $interlinks_optimization_post_types_a, true ) ) {
+					$load_post_editor_js = true;
+				}
+
+				if ( $load_post_editor_js ) {
+
+					// Store the JavaScript parameters in the window.DAEXTREVOP_PARAMETERS object.
+					$initialization_script = 'window.DAEXTINMA_PARAMETERS = {';
+					$initialization_script .= 'ajax_url: "' . admin_url( 'admin-ajax.php' ) . '",';
+					$initialization_script .= 'admin_url: "' . get_admin_url() . '",';
+					$initialization_script .= 'nonce: "' . wp_create_nonce( 'daextinma' ) . '"';
+					$initialization_script .= '};';
+
+					// Post Editor Js.
+					wp_enqueue_script( $this->shared->get( 'slug' ) . '-post-editor', $this->shared->get( 'url' ) . 'admin/assets/js/post-editor.js', array( 'jquery' ), $this->shared->get( 'ver' ), true );
+
+					wp_add_inline_script( $this->shared->get( 'slug' ) . '-post-editor', $initialization_script, 'before' );
+
+					wp_enqueue_script( $this->shared->get( 'slug' ) . '-menu', $this->shared->get( 'url' ) . 'admin/assets/js/framework-menu/menu.js', array( 'jquery' ), $this->shared->get( 'ver' ), true );
+
+				}
+
+			}
+
 		}
 
-		$interlinks_optimization_post_types_a = maybe_unserialize( get_option( $this->shared->get( 'slug' ) . '_interlinks_optimization_post_types' ) );
-		if ( is_array( $interlinks_optimization_post_types_a ) && in_array( $screen->id, $interlinks_optimization_post_types_a, true ) ) {
-			$load_post_editor_js = true;
-		}
-
-		if ( $load_post_editor_js ) {
-
-			// Store the JavaScript parameters in the window.DAEXTREVOP_PARAMETERS object.
-			$initialization_script  = 'window.DAEXTINMA_PARAMETERS = {';
-			$initialization_script .= 'ajax_url: "' . admin_url( 'admin-ajax.php' ) . '",';
-			$initialization_script .= 'admin_url: "' . get_admin_url() . '",';
-			$initialization_script .= 'nonce: "' . wp_create_nonce( 'daextinma' ) . '"';
-			$initialization_script .= '};';
-
-			// Post Editor Js.
-			wp_enqueue_script( $this->shared->get( 'slug' ) . '-post-editor', $this->shared->get( 'url' ) . 'admin/assets/js/post-editor.js', array( 'jquery' ), $this->shared->get( 'ver' ), true );
-
-			wp_add_inline_script( $this->shared->get( 'slug' ) . '-post-editor', $initialization_script, 'before' );
-
-			wp_enqueue_script( $this->shared->get( 'slug' ) . '-menu', $this->shared->get( 'url' ) . 'admin/assets/js/framework-menu/menu.js', array( 'jquery' ), $this->shared->get( 'ver' ), true );
-
-		}
 	}
 
 	/**
@@ -510,7 +532,7 @@ class Daextinma_Admin {
 	 */
 	static public function ac_initialize_options() {
 
-		if ( intval( get_option( 'daextinma_options_version' ), 10 ) < 1 ) {
+		if ( intval( get_option( 'daextinma_options_version' ), 10 ) < 2 ) {
 
 			// assign an instance of Daextinma_Shared.
 			$shared = Daextinma_Shared::get_instance();
@@ -520,7 +542,7 @@ class Daextinma_Admin {
 			}
 
 			// Update options version.
-			update_option( 'daextinma_options_version', '1' );
+			update_option( 'daextinma_options_version', '2' );
 
 		}
 
@@ -656,6 +678,10 @@ class Daextinma_Admin {
 		foreach ( $shared->get( 'options' ) as $key => $value ) {
 			delete_option( $key );
 		}
+
+		// Delete the option used by the DAEXT_Notices_Manager class to persist the notices state.
+		delete_option( $shared->get( 'slug' ) . '_notices_state' );
+
 	}
 
 	/**
@@ -705,8 +731,8 @@ class Daextinma_Admin {
 
 		$this->screen_id_juice = add_submenu_page(
 			$this->shared->get( 'slug' ) . '-dashboard',
-			esc_html__( 'IM - Juice', 'daext-interlinks-manager' ),
-			esc_html__( 'Juice', 'daext-interlinks-manager' ),
+			esc_html__( 'IM - Link Equity', 'daext-interlinks-manager' ),
+			esc_html__( 'Link Equity', 'daext-interlinks-manager' ),
 			'edit_posts',
 			$this->shared->get( 'slug' ) . '-juice',
 			array( $this, 'me_display_menu_juice' )
@@ -758,6 +784,23 @@ class Daextinma_Admin {
 	 */
 	public function create_meta_box() {
 
+		// Ref: https://make.wordpress.org/core/2018/11/07/meta-box-compatibility-flags/ .
+		$classic_editor_args =
+				array(
+
+					/*
+					 * It's not confirmed that this meta box works in the block editor.
+					 */
+						'__block_editor_compatible_meta_box' => false,
+
+					/*
+					 * This meta box should only be loaded in the classic editor interface, and the block editor
+					 * should not display it.
+					 */
+						'__back_compat_meta_box'             => true,
+
+				);
+
 		if ( current_user_can( 'edit_posts' ) ) {
 
 			/**
@@ -769,11 +812,12 @@ class Daextinma_Admin {
 				foreach ( $interlinks_options_post_types_a as $key => $post_type ) {
 					add_meta_box(
 						'daextinma-meta-options',
-						esc_html__( 'Interlinks Options', 'daext-interlinks-manager' ),
+						esc_html__( 'Internal Links Settings', 'daext-interlinks-manager' ),
 						array( $this, 'create_options_meta_box_callback' ),
 						$post_type,
 						'side',
-						'high'
+						'default',
+						$classic_editor_args
 					);
 				}
 			}
@@ -790,11 +834,12 @@ class Daextinma_Admin {
 				foreach ( $interlinks_optimization_post_types_a as $key => $post_type ) {
 					add_meta_box(
 						'daextinma-meta-optimization',
-						esc_html__( 'Interlinks Optimization', 'daext-interlinks-manager' ),
+						esc_html__( 'Internal Links Optimization', 'daext-interlinks-manager' ),
 						array( $this, 'create_optimization_meta_box_callback' ),
 						$post_type,
 						'side',
-						'default'
+						'default',
+						$classic_editor_args
 					);
 				}
 			}
@@ -818,9 +863,14 @@ class Daextinma_Admin {
 
 		?>
 
-		<label for="daextinma-seo-power"><?php esc_html_e( 'SEO Power', 'daext-interlinks-manager' ); ?></label>
+		<p class="daextinma-seo-power-label-wrapper">
+			<label class="daextinma-seo-power-label" for="daextinma-seo-power"><?php esc_html_e( 'Total Link Equity', 'daext-interlinks-manager' ); ?></label>
+		</p>
 		<input type="text" name="daextinma_seo_power" id="daextinma-seo-power"
 				value="<?php echo esc_attr( $seo_power ); ?>" class="regular-text" maxlength="7">
+		<p class="daextinma-seo-power-description description">
+			<?php esc_html_e( 'Set the amount of link equity this post passes through its internal links. This value determines the link equity assigned to linked pages in the plugin reports.', 'daext-interlinks-manager' ); ?>
+		</p>
 
 		<?php
 

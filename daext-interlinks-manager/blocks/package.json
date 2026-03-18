@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "build": "wp-scripts build",
+    "start": "wp-scripts start --webpack-devtool"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "^25.4.0"
+  }
+}

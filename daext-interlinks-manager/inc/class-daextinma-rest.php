@@ -81,7 +81,7 @@ class Daextinma_Rest {
 			)
 		);
 
-		// Add the POST 'real-voice-pro/v1/statistics/' endpoint to the Rest API.
+		// Add the POST 'daext-interlinks-manager/v1/statistics/' endpoint to the Rest API.
 		register_rest_route(
 			'interlinks-manager-pro/v1',
 			'/statistics/',
@@ -92,7 +92,7 @@ class Daextinma_Rest {
 			)
 		);
 
-		// Add the POST 'real-voice-pro/v1/juice/' endpoint to the Rest API.
+		// Add the POST 'daext-interlinks-manager/v1/juice/' endpoint to the Rest API.
 		register_rest_route(
 			'interlinks-manager-pro/v1',
 			'/juice/',
@@ -103,7 +103,7 @@ class Daextinma_Rest {
 			)
 		);
 
-		// Add the POST 'real-voice-pro/v1/juice-url/' endpoint to the Rest API.
+		// Add the POST 'daext-interlinks-manager/v1/juice-url/' endpoint to the Rest API.
 		register_rest_route(
 			'interlinks-manager-pro/v1',
 			'/juice-url/',
@@ -114,7 +114,7 @@ class Daextinma_Rest {
 			)
 		);
 
-		// Add the POST 'real-voice-pro/v1/dashboard-menu-export-csv/' endpoint to the Rest API.
+		// Add the POST 'daext-interlinks-manager/v1/dashboard-menu-export-csv/' endpoint to the Rest API.
 		register_rest_route(
 			'interlinks-manager-pro/v1',
 			'/dashboard-menu-export-csv/',
@@ -125,7 +125,7 @@ class Daextinma_Rest {
 			)
 		);
 
-		// Add the POST 'real-voice-pro/v1/juice-menu-export-csv/' endpoint to the Rest API.
+		// Add the POST 'daext-interlinks-manager/v1/juice-menu-export-csv/' endpoint to the Rest API.
 		register_rest_route(
 			'interlinks-manager-pro/v1',
 			'/juice-menu-export-csv/',
@@ -136,7 +136,7 @@ class Daextinma_Rest {
 			)
 		);
 
-		// Add the POST 'real-voice-pro/v1/anchors-menu-export-csv/' endpoint to the Rest API.
+		// Add the POST 'daext-interlinks-manager/v1/anchors-menu-export-csv/' endpoint to the Rest API.
 		register_rest_route(
 			'interlinks-manager-pro/v1',
 			'/anchors-menu-export-csv/',
@@ -144,6 +144,17 @@ class Daextinma_Rest {
 				'methods'             => 'POST',
 				'callback'            => array( $this, 'rest_api_interlinks_manager_pro_anchors_menu_export_csv_callback' ),
 				'permission_callback' => array( $this, 'rest_api_interlinks_manager_pro_read_juice_callback_permission_check' ),
+			)
+		);
+
+		// Add the POST 'daext-interlinks-manager/v1/generate-interlinks-optimization/' endpoint to the Rest API.
+		register_rest_route(
+			'daext-interlinks-manager/v1',
+			'/generate-interlinks-optimization/',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'rest_api_daext_interlinks_manager_generate_interlinks_optimization_callback' ),
+				'permission_callback' => array( $this, 'rest_api_daext_interlinks_manager_generate_interlinks_optimization_callback_permission_check' ),
 			)
 		);
 	}
@@ -296,6 +307,12 @@ class Daextinma_Rest {
 			// Run update_interlinks_archive() to update the archive with the statistics.
 			$this->shared->update_interlinks_archive();
 
+			/**
+			 * Record that the analysis feature has been used.
+			 */
+			$analysis_runs = (int) get_option( $this->shared->get( 'slug' ) . '_analysis_runs' );
+			update_option( $this->shared->get( 'slug' ) . '_analysis_runs', $analysis_runs + 1 );
+
 		}
 
 		// Create the WHERE part of the query based on the $optimization_status value.
@@ -434,6 +451,12 @@ class Daextinma_Rest {
 
 			// Run update_interlinks_archive() to update the archive with the statistics.
 			$this->shared->update_interlinks_archive();
+
+			/**
+			 * Record that the analysis feature has been used.
+			 */
+			$analysis_runs = (int) get_option( $this->shared->get( 'slug' ) . '_analysis_runs' );
+			update_option( $this->shared->get( 'slug' ) . '_analysis_runs', $analysis_runs + 1 );
 
 		}
 
@@ -732,7 +755,7 @@ class Daextinma_Rest {
 			// set headings.
 			$csv_content .= '"' . $this->shared->esc_csv( __( 'URL', 'daext-interlinks-manager' ) ) . '",';
 			$csv_content .= '"' . $this->shared->esc_csv( __( 'Internal Inbound Links', 'daext-interlinks-manager' ) ) . '",';
-			$csv_content .= '"' . $this->shared->esc_csv( __( 'Juice', 'daext-interlinks-manager' ) ) . '"';
+			$csv_content .= '"' . $this->shared->esc_csv( __( 'Link Equity', 'daext-interlinks-manager' ) ) . '"';
 			$csv_content .= $new_line;
 
 			// set column content.
@@ -806,7 +829,7 @@ class Daextinma_Rest {
 			$csv_content .= '"' . $this->shared->esc_csv( __( 'URL', 'daext-interlinks-manager' ) ) . '",';
 			$csv_content .= '"' . $this->shared->esc_csv( __( 'Post', 'daext-interlinks-manager' ) ) . '",';
 			$csv_content .= '"' . $this->shared->esc_csv( __( 'Anchor Text', 'daext-interlinks-manager' ) ) . '",';
-			$csv_content .= '"' . $this->shared->esc_csv( __( 'Juice', 'daext-interlinks-manager' ) ) . '"';
+			$csv_content .= '"' . $this->shared->esc_csv( __( 'Link Equity', 'daext-interlinks-manager' ) ) . '"';
 
 			$csv_content .= $new_line;
 
@@ -833,5 +856,55 @@ class Daextinma_Rest {
 		$response = new WP_REST_Response( $response );
 
 		return $response;
+	}
+
+	/**
+	 * Callback for the POST 'daext-interlinks-manager/v1/generate-interlinks-optimization' endpoint of the Rest API.
+	 *
+	 * This method is in the following contexts:
+	 *
+	 * - In the block editor to retrieve internal links optimization data for the edited post.
+	 *
+	 * @return WP_Error|WP_REST_Response
+	 */
+	public function rest_api_daext_interlinks_manager_generate_interlinks_optimization_callback($request) {
+
+		// Set the PHP "Max Execution Time" and "Memory Limit" based on the values defined in the options.
+		$this->shared->set_met_and_ml();
+
+		// Get the post id for which the suggestions should be generated.
+		$post_id = $request->get_param( 'id' ) !== null ? intval( $request->get_param( 'id' ), 10 ) : null;
+
+		// Get the post object.
+		$post = get_post( $post_id );
+
+		$data = array();
+		$data['suggested_min_number_of_interlinks'] = $this->shared->get_suggested_min_number_of_interlinks( $post->ID );
+		$data['suggested_max_number_of_interlinks'] = $this->shared->get_suggested_max_number_of_interlinks( $post->ID );
+		$data['number_of_manual_interlinks']        = $this->shared->get_manual_interlinks( $post->post_content );
+		$data['total_number_of_interlinks']         = $data['number_of_manual_interlinks'];
+
+		// Return the suggestions as a JSON response.
+		return new WP_REST_Response( $data, 200 );
+
+	}
+
+	/**
+	 * Check the user capability.
+	 *
+	 * @return true|WP_Error
+	 */
+	public function rest_api_daext_interlinks_manager_generate_interlinks_optimization_callback_permission_check() {
+
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			return new WP_Error(
+				'rest_update_error',
+				'Sorry, you are not allowed to generate internal optimization data.',
+				array( 'status' => 403 )
+			);
+		}
+
+		return true;
+
 	}
 }

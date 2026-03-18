@@ -23,8 +23,8 @@ class Daextinma_Juice_Menu_Elements extends Daextinma_Menu_Elements {
 
 		$this->menu_slug          = 'juice';
 		$this->slug_plural        = 'juice';
-		$this->label_singular     = __( 'Juice', 'daext-interlinks-manager' );
-		$this->label_plural       = __( 'Juice', 'daext-interlinks-manager' );
+		$this->label_singular     = __( 'Link Equity', 'daext-interlinks-manager' );
+		$this->label_plural       = __( 'Link Equity', 'daext-interlinks-manager' );
 		$this->primary_key        = 'category_id';
 		$this->db_table           = 'category';
 		$this->list_table_columns = array(

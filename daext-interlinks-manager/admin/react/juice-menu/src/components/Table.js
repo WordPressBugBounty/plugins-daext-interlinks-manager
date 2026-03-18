@@ -92,7 +92,7 @@ const Chart = (props) => {
                             onClick={props.handleSortingChanges}
                             value={'juice'}
                             data-icon={handleDataIcon('juice')}
-                        >{__('Juice', 'daext-interlinks-manager')}</button>
+                        >{__('Link Equity', 'daext-interlinks-manager')}</button>
                     </th>
 
                     <th></th>

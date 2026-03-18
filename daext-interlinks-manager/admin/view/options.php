@@ -2,7 +2,7 @@
 /**
  * The basic HTML for displaying the options page. Note that this page is then powered by React.
  *
- * @package real-voice-pro
+ * @package daext-interlinks-manager
  */
 
 $this->menu_elements->capability = 'manage_options';
