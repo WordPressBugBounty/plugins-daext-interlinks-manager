@@ -80,13 +80,13 @@ class Daextinma_Menu_Options {
 							),
 							array(
 								'name'      => 'daextinma_penality_per_position_percentage',
-								'label'     => __( 'Penality per Position (%)', 'daext-interlinks-manager' ),
+								'label'     => __( 'Position Penalty (%)', 'daext-interlinks-manager' ),
 								'type'      => 'range',
 								'tooltip'   => __(
 									'With multiple links in an article, the algorithm that calculates the link equity passed by each link removes a percentage of the passed link equity based on the position of the link compared to the other links.',
 									'daext-interlinks-manager'
 								),
-								'help'      => __( 'Set the penality per position percentage.', 'daext-interlinks-manager' ),
+								'help'      => __( 'Set the link penalty per position percentage.', 'daext-interlinks-manager' ),
 								'rangeMin'  => 1,
 								'rangeMax'  => 100,
 								'rangeStep' => 1,
@@ -196,6 +196,17 @@ class Daextinma_Menu_Options {
 								),
 								'selectOptions' => $post_types_select_options,
 								'help'          => __( 'Select the post types analyzed in the Link Equity menu.', 'daext-interlinks-manager' ),
+							),
+							array(
+								'name'          => 'daextinma_http_status_post_types',
+								'label'         => __( 'Broken Links Post Types', 'daext-interlinks-manager' ),
+								'type'          => 'select-multiple',
+								'tooltip'       => __(
+									'With this option you are able to determine the post types analyzed in the Broken Links menu. Leave this field empty to perform the analysis in any post type.',
+									'daext-interlinks-manager'
+								),
+								'selectOptions' => $post_types_select_options,
+								'help'          => __( 'Select the post types analyzed in the Broken Links menu.', 'daext-interlinks-manager' ),
 							),
 							array(
 								'name'          => 'daextinma_internal_links_data_update_frequency',
@@ -325,6 +336,50 @@ class Daextinma_Menu_Options {
 								),
 								'selectOptions' => $post_types_select_options,
 								'help'          => __( 'Select the post types where the "Internal Links Optimization" panel should be available.', 'daext-interlinks-manager' ),
+							),
+						),
+					),
+					array(
+						'title'   => __( 'Broken Links', 'daext-interlinks-manager' ),
+						'options' => array(
+							array(
+								'name'      => 'daextinma_http_status_checks_per_iteration',
+								'label'     => __( 'WP-Cron Checks Per Run', 'daext-interlinks-manager' ),
+								'type'      => 'range',
+								'tooltip'   => __(
+									'This value determines the number of HTTP requests sent at each run of the WP-Cron event. This parameter is used in the WP-Cron event used to verify the HTTP response status codes of the URLs used in the internal links.',
+									'daext-interlinks-manager'
+								),
+								'help'      => __( 'Set the number of HTTP requests sent at each run of the WP-Cron event.', 'daext-interlinks-manager' ),
+								'rangeMin'  => 1,
+								'rangeMax'  => 4,
+								'rangeStep' => 1,
+							),
+							array(
+								'name'      => 'daextinma_http_status_cron_schedule_interval',
+								'label'     => __( 'WP-Cron Event Interval', 'daext-interlinks-manager' ),
+								'type'      => 'range',
+								'tooltip'   => __(
+									'This value determines the interval in seconds between the custom WP-Cron events used to verify the HTTP response status codes of the URLs used in the internal links.',
+									'daext-interlinks-manager'
+								),
+								'help'      => __( 'Set the interval in seconds between the WP-Cron events.', 'daext-interlinks-manager' ),
+								'rangeMin'  => 60,
+								'rangeMax'  => 900,
+								'rangeStep' => 60,
+							),
+							array(
+								'name'      => 'daextinma_http_status_request_timeout',
+								'label'     => __( 'Request Timeout', 'daext-interlinks-manager' ),
+								'type'      => 'range',
+								'tooltip'   => __(
+									'This value determines how long the connection should stay open in seconds for the HTTP requests used to verify the HTTP response status codes of the URLs used in the internal links.',
+									'daext-interlinks-manager'
+								),
+								'help'      => __( 'Set the HTTP request timeout in seconds.', 'daext-interlinks-manager' ),
+								'rangeMin'  => 2,
+								'rangeMax'  => 8,
+								'rangeStep' => 1,
 							),
 						),
 					),

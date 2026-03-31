@@ -278,7 +278,7 @@ class Daextinma_Menu_Elements {
 						<div class="daextinma-pro-features__description">
 							<?php
 							esc_html_e(
-								'Export the internal links data, receive relevant internal link suggestions, automatically create internal links based on the specified keywords, track the clicks on the internal links, find broken links, and more!',
+								'Export the internal links data, receive relevant internal link suggestions, automatically create internal links based on the specified keywords, track the clicks on the internal links, and more!',
 								'daext-interlinks-manager'
 							);
 							?>

@@ -31,8 +31,12 @@ class Daextinma_Shared {
 	 */
 	private function __construct() {
 
+		add_action( 'init', array( $this, 'cron_schedules_init' ) );
+
+		add_action( 'daextinma_cron_hook', array( $this, 'daextinma_cron_exec' ) );
+
 		$this->data['slug'] = 'daextinma';
-		$this->data['ver']  = '1.17';
+		$this->data['ver']  = '1.18';
 		$this->data['dir']  = substr( plugin_dir_path( __FILE__ ), 0, -7 );
 		$this->data['url']  = substr( plugin_dir_url( __FILE__ ), 0, -7 );
 
@@ -69,6 +73,7 @@ class Daextinma_Shared {
 			$this->get( 'slug' ) . '_limit_posts_analysis' => '1000',
 			$this->get( 'slug' ) . '_dashboard_post_types' => array( 'post', 'page' ),
 			$this->get( 'slug' ) . '_juice_post_types'     => array( 'post', 'page' ),
+			$this->get( 'slug' ) . '_http_status_post_types' => array( 'post', 'page' ),
 			$this->get( 'slug' ) . '_internal_links_data_update_frequency' => 'hourly',
 			$this->get( 'slug' ) . '_juice_data_update_frequency' => 'hourly',
 
@@ -81,6 +86,11 @@ class Daextinma_Shared {
 			// Meta boxes.
 			$this->get( 'slug' ) . '_interlinks_options_post_types' => array( 'post', 'page' ),
 			$this->get( 'slug' ) . '_interlinks_optimization_post_types' => array( 'post', 'page' ),
+
+			// Broken Links.
+			$this->get( 'slug' ) . '_http_status_checks_per_iteration' => '2',
+			$this->get( 'slug' ) . '_http_status_cron_schedule_interval' => '60',
+			$this->get( 'slug' ) . '_http_status_request_timeout' => '5',
 
 		);
 	}
@@ -97,6 +107,31 @@ class Daextinma_Shared {
 		}
 
 		return self::$instance;
+	}
+
+	/**
+	 * Filters the non-default cron schedules.
+	 *
+	 * @return void
+	 */
+	public function cron_schedules_init() {
+		add_filter( 'cron_schedules', array( $this, 'custom_cron_schedule' ) );
+	}
+
+	/**
+	 * Adds a custom cron schedule for every 5 minutes.
+	 *
+	 * @param array $schedules An array of non-default cron schedules.
+	 * @return array Filtered array of non-default cron schedules.
+	 */
+	public function custom_cron_schedule( $schedules ) {
+
+		// Add a custom schedule named 'daextinma_custom_schedule' to the existing set.
+		$schedules['daextinma_custom_schedule'] = array(
+			'interval' => intval( get_option( $this->get( 'slug' ) . '_http_status_cron_schedule_interval' ), 10 ),
+			'display'  => __( 'Custom schedule based on the Interlinks Manager options.', 'daext-interlinks-manager'),
+		);
+		return $schedules;
 	}
 
 	/**
@@ -1867,6 +1902,28 @@ class Daextinma_Shared {
 	}
 
 	/**
+	 * Iterate the $results array and find the number of successful responses (200 status code).
+	 *
+	 * @param array $results The HTTP responses data stored in the archive db table provided as an array.
+	 *
+	 * @return int The number of successful responses. (200 status code)
+	 */
+	public function get_successful_responses( $results ) {
+
+		// Init the $successful_responses variable.
+		$successful_responses = 0;
+
+		// Iterate the $results array and add to the $successful_responses 1 for each successful response.
+		foreach ( $results as $key => $result ) {
+			if ( intval( $result->code, 10 ) === 200 ) {
+				++$successful_responses;
+			}
+		}
+
+		return $successful_responses;
+	}
+
+	/**
 	 * Converts relative URLs to absolute URLs.
 	 *
 	 * The following type of URLs are supported:
@@ -2133,6 +2190,432 @@ class Daextinma_Shared {
 		$post_types_with_ui = $temp_array;
 
 		return $post_types_with_ui;
+	}
+
+	/**
+	 * Generate the http status archive displayed in the "Http status" menu.
+	 *
+	 * @return void
+	 */
+	public function update_http_status_archive() {
+
+		// Clear the existing cron event.
+		wp_clear_scheduled_hook( 'daextinma_cron_hook' );
+
+		// Create a new list of URLs to check.
+		$this->create_http_status_list();
+
+		// Schedule the cron event.
+		$this->schedule_cron_event();
+	}
+
+	/**
+	 * Create the list of URLs for which the HTTP status code should be checked. The records are saved in the
+	 * "_http_status" db table.
+	 */
+	public function create_http_status_list() {
+
+		// Set the PHP "Max Execution Time" and "Memory Limit" based on the values defined in the options.
+		$this->set_met_and_ml();
+
+		// Delete all the items in the "_http_status" db table.
+		global $wpdb;
+		$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}daextinma_http_status" );
+
+		/**
+		 * Create a query used to consider in the analysis only the post types selected with the
+		 * Broken Links Post Types option.
+		 */
+		$http_status_post_types_a = maybe_unserialize( get_option( $this->get( 'slug' ) . '_http_status_post_types' ) );
+		$post_types_query         = '';
+
+		// If $analysis_post_types_a is not an array fill $analysis_post_types_a with the posts available in the website.
+		if ( ! is_array( $http_status_post_types_a ) || 0 === count( $http_status_post_types_a ) ) {
+			$http_status_post_types_a = $this->get_post_types_with_ui();
+		}
+
+		if ( is_array( $http_status_post_types_a ) ) {
+			foreach ( $http_status_post_types_a as $key => $value ) {
+
+				$post_types_query .= $wpdb->prepare('post_type = %s', $value);
+				if ( ( count( $http_status_post_types_a ) - 1 ) !== $key ) {
+					$post_types_query .= ' OR ';}
+			}
+		}
+
+		// Get all the considered posts.
+		global $wpdb;
+		$limit_posts_analysis = intval( get_option( $this->get( 'slug' ) . '_limit_posts_analysis' ), 10 );
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $post_types_query is already sanitized.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery
+		$posts_a = $wpdb->get_results(
+			$wpdb->prepare("SELECT ID, post_title, post_type, post_date, post_content FROM {$wpdb->prefix}posts WHERE ($post_types_query) AND post_status = 'publish' ORDER BY post_date DESC LIMIT %d", $limit_posts_analysis),
+			ARRAY_A
+		);
+		// phpcs:enable
+
+		foreach ( $posts_a as $key => $single_post ) {
+
+			// Set the post content.
+			$post_content = $single_post['post_content'];
+
+			// Remove the HTML comments.
+			$post_content = $this->remove_html_comments( $post_content );
+
+			// Remove script tags.
+			$post_content = $this->remove_script_tags( $post_content );
+
+			// Find all the manual and auto interlinks matches with a regex and add them in an array.
+			preg_match_all(
+				$this->internal_links_regex(),
+				$post_content,
+				$matches,
+				PREG_OFFSET_CAPTURE
+			);
+
+			// Save the URL and other data in the "_http_status" db table.
+			$captures = $matches[2];
+			foreach ( $captures as $key => $single_capture ) {
+
+				// Get the current time.
+				$date     = current_time( 'mysql' );
+				$date_gmt = current_time( 'mysql', 1 );
+
+				// Save the link in the "http_status" db table.
+				global $wpdb;
+
+				// phpcs:disable WordPress.DB.DirectDatabaseQuery
+				$wpdb->query(
+					$wpdb->prepare(
+						"INSERT INTO {$wpdb->prefix}daextinma_http_status SET 
+                    post_id = %d,
+                    post_title = %s,
+                    post_permalink = %s,
+                    post_edit_link = %s,
+                    url = %s,
+                    anchor = %s,
+                    checked = %d,
+                    last_check_date = %s,
+                    last_check_date_gmt = %s",
+						$single_post['ID'],
+						get_the_title( $single_post['ID'] ),
+						get_the_permalink( $single_post['ID'] ),
+						get_edit_post_link( $single_post['ID'], 'url' ),
+						$this->relative_to_absolute_url($single_capture[0], $single_post['ID']),
+						$matches[3][ $key ][0],
+						0,
+						$date,
+						$date_gmt
+					)
+				);
+				// phpcs:enable
+
+			}
+		}
+	}
+
+	/**
+	 * Get the HTTP response status code of a limited number of URLs saved in the "http_status" db table.
+	 *
+	 * Note that:
+	 *
+	 * - The number of URLs checked per run of this function is set in the "http_status_checks_per_iteration" option.
+	 * - The timeout of the HTTP request is set in the "http_status_request_timeout" option.
+	 * - This function runs in a WP-Cron job.
+	 */
+	public function check_http_status() {
+
+		$http_status_checks_per_iteration = intval( get_option( $this->get( 'slug' ) . '_http_status_checks_per_iteration' ), 10 );
+		$http_status_request_timeout      = intval( get_option( $this->get( 'slug' ) . '_http_status_request_timeout' ), 10 );
+
+		// Iterate through the url available in the http_status db table.
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$http_status_a = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}daextinma_http_status WHERE checked = 0 ORDER BY id ASC LIMIT %d",
+				$http_status_checks_per_iteration
+			)
+			, ARRAY_A );
+
+		// Iterate through $http_status_a.
+		foreach ( $http_status_a as $key => $http_status ) {
+
+			// Check the http response of the url.
+			$response    = wp_remote_get( $http_status['url'], array( 'timeout' => $http_status_request_timeout ) );
+			$status_code = wp_remote_retrieve_response_code( $response );
+
+			// Get the current time.
+			$date     = current_time( 'mysql' );
+			$date_gmt = current_time( 'mysql', 1 );
+
+			// Update the checked field to 1 in the "_http_status" db table for the iterated id.
+			global $wpdb;
+
+			// phpcs:disable WordPress.DB.DirectDatabaseQuery
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE {$wpdb->prefix}daextinma_http_status SET
+				checked = %d,
+                last_check_date = %s,
+                last_check_date_gmt = %s,
+                code = %d,
+                code_description = %s
+				WHERE id = %d",
+					1,
+					$date,
+					$date_gmt,
+					$status_code,
+					$this->get_status_code_description($status_code),
+					$http_status['id']
+				)
+			);
+			// phpcs:enable
+
+		}
+	}
+
+	/**
+	 * Schedule the cron event.
+	 */
+	public function schedule_cron_event() {
+		if ( ! wp_next_scheduled( 'daextinma_cron_hook' ) ) {
+			wp_schedule_event( time(), 'daextinma_custom_schedule', 'daextinma_cron_hook' );
+		}
+	}
+
+	/**
+	 * Given the value of the http response status code, return the status code description.
+	 */
+	public function get_status_code_description( $http_status_code ) {
+
+		// Add the status code description.
+		switch ( $http_status_code ) {
+
+			// 1xx - Informational responses.
+			case 100:
+				$http_status_code_description = 'Continue';
+				break;
+			case 101:
+				$http_status_code_description = 'Switching Protocols';
+				break;
+			case 102:
+				$http_status_code_description = 'Processing';
+				break;
+			case 103:
+				$http_status_code_description = 'Early Hints';
+				break;
+
+			// 2xx - Successful responses.
+			case 200:
+				$http_status_code_description = 'OK';
+				break;
+			case 201:
+				$http_status_code_description = 'Created';
+				break;
+			case 202:
+				$http_status_code_description = 'Accepted';
+				break;
+			case 203:
+				$http_status_code_description = 'Non-Authoritative Information';
+				break;
+			case 204:
+				$http_status_code_description = 'No Content';
+				break;
+			case 205:
+				$http_status_code_description = 'Reset Content';
+				break;
+			case 206:
+				$http_status_code_description = 'Partial Content';
+				break;
+			case 207:
+				$http_status_code_description = 'Multi-Status';
+				break;
+			case 208:
+				$http_status_code_description = 'Already Reported';
+				break;
+			case 226:
+				$http_status_code_description = 'IM Used';
+				break;
+
+			// 3xx - Redirection messages.
+			case 300:
+				$http_status_code_description = 'Multiple Choices';
+				break;
+			case 301:
+				$http_status_code_description = 'Moved Permanently';
+				break;
+			case 302:
+				$http_status_code_description = 'Found';
+				break;
+			case 303:
+				$http_status_code_description = 'See Other';
+				break;
+			case 304:
+				$http_status_code_description = 'Not Modified';
+				break;
+			case 305:
+				$http_status_code_description = 'Use Proxy';
+				break;
+			case 306:
+				$http_status_code_description = 'unused';
+				break;
+			case 307:
+				$http_status_code_description = 'Temporary Redirect';
+				break;
+			case 308:
+				$http_status_code_description = 'Permanent Redirect';
+				break;
+
+			// 4xx - Client error responses.
+			case 400:
+				$http_status_code_description = 'Bad Request';
+				break;
+			case 401:
+				$http_status_code_description = 'Unauthorized';
+				break;
+			case 402:
+				$http_status_code_description = 'Payment Required';
+				break;
+			case 403:
+				$http_status_code_description = 'Forbidden';
+				break;
+			case 404:
+				$http_status_code_description = 'Not Found';
+				break;
+			case 405:
+				$http_status_code_description = 'Method Not Allowed';
+				break;
+			case 406:
+				$http_status_code_description = 'Not Acceptable';
+				break;
+			case 407:
+				$http_status_code_description = 'Proxy Authentication Required';
+				break;
+			case 408:
+				$http_status_code_description = 'Request Timeout';
+				break;
+			case 409:
+				$http_status_code_description = 'Conflict';
+				break;
+			case 410:
+				$http_status_code_description = 'Gone';
+				break;
+			case 411:
+				$http_status_code_description = 'Length Required';
+				break;
+			case 412:
+				$http_status_code_description = 'Precondition Failed';
+				break;
+			case 413:
+				$http_status_code_description = 'Payload Too Large';
+				break;
+			case 414:
+				$http_status_code_description = 'URI Too Long';
+				break;
+			case 415:
+				$http_status_code_description = 'Unsupported Media Type';
+				break;
+			case 416:
+				$http_status_code_description = 'Range Not Satisfiable';
+				break;
+			case 417:
+				$http_status_code_description = 'Expectation Failed';
+				break;
+			case 418:
+				$http_status_code_description = 'I\'m a teapot';
+				break;
+			case 421:
+				$http_status_code_description = 'Misdirected Request';
+				break;
+			case 422:
+				$http_status_code_description = 'Unprocessable Content';
+				break;
+			case 423:
+				$http_status_code_description = 'Locked';
+				break;
+			case 424:
+				$http_status_code_description = 'Failed Dependency';
+				break;
+			case 426:
+				$http_status_code_description = 'Upgrade Required';
+				break;
+			case 428:
+				$http_status_code_description = 'Precondition Required';
+				break;
+			case 429:
+				$http_status_code_description = 'Too Many Requests';
+				break;
+			case 431:
+				$http_status_code_description = 'Request Header Fields Too Large';
+				break;
+			case 451:
+				$http_status_code_description = 'Unavailable For Legal Reasons';
+				break;
+
+			// 5xx - Server error responses.
+			case 500:
+				$http_status_code_description = 'Internal Server Error';
+				break;
+			case 501:
+				$http_status_code_description = 'Not Implemented';
+				break;
+			case 502:
+				$http_status_code_description = 'Bad Gateway';
+				break;
+			case 503:
+				$http_status_code_description = 'Service Unavailable';
+				break;
+			case 504:
+				$http_status_code_description = 'Gateway Timeout';
+				break;
+			case 505:
+				$http_status_code_description = 'HTTP Version Not Supported';
+				break;
+			case 506:
+				$http_status_code_description = 'Variant Also Negotiates';
+				break;
+			case 507:
+				$http_status_code_description = 'Insufficient Storage';
+				break;
+			case 508:
+				$http_status_code_description = 'Loop Detected';
+				break;
+			case 510:
+				$http_status_code_description = 'Not Extended';
+				break;
+			case 511:
+				$http_status_code_description = 'Network Authentication Required';
+				break;
+
+			default:
+				$http_status_code_description = 'Unknown';
+				break;
+
+		}
+
+		return $http_status_code_description;
+	}
+
+	/**
+	 * Execute the cron jobs.
+	 */
+	public function daextinma_cron_exec() {
+
+		// Get the HTTP response status code of a limited number of URLs saved in the "http_status" db table.
+		$this->check_http_status();
+
+		/**
+		 * Check in the "_http_status" db table if all the links have been checked. (if there are zero links to check)
+		 * If all the links have been checked, clear the schedule of the cron hook.
+		 */
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$count = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}daextinma_http_status WHERE checked = 0" );
+		if ( intval( $count, 10 ) === 0 ) {
+			wp_clear_scheduled_hook( 'daextinma_cron_hook' );
+		}
 	}
 
 }

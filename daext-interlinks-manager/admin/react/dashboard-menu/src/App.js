@@ -256,7 +256,7 @@ const App = () => {
                                     <div className={'statistics'}>
                                         <div className={'statistic-label'}>{__('All posts', 'daext-interlinks-manager')}:</div>
                                         <div className={'statistic-value'}>{statistics.allPosts}</div>
-                                        <div className={'statistic-label'}>{__('Average Internal Links', 'daext-interlinks-manager')}:</div>
+                                        <div title={__('The average number of internal links per post.', 'daext-interlinks-manager')} className={'statistic-label'}>{__('Average Internal Links', 'daext-interlinks-manager')}:</div>
                                         <div className={'statistic-value'}>{statistics.averageMil}</div>
                                     </div>
                                     <div className={'tools-actions'}>

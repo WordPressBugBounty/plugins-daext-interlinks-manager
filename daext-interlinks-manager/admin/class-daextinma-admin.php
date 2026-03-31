@@ -39,6 +39,13 @@ class Daextinma_Admin {
 	private $screen_id_juice = null;
 
 	/**
+	 * The screen id of the "Broken Links" menu.
+	 *
+	 * @var null
+	 */
+	private $screen_id_http_status = null;
+
+	/**
 	 * The screen id of the "Options" menu.
 	 *
 	 * @var null
@@ -125,50 +132,46 @@ class Daextinma_Admin {
 							'menu_slug' => 'daextinma-juice',
 						),
 						array(
-							'link_text' => __( 'Options', 'daext-interlinks-manager' ),
-							'link_url'  => admin_url( 'admin.php?page=daextinma-options' ),
-							'icon'      => 'settings-01',
-							'menu_slug' => 'daextinma-options',
+								'link_text' => __('Broken Links', 'interlinks-manager'),
+								'link_url'  => admin_url( 'admin.php?page=daextinma-http-status' ),
+								'icon'      => 'check-verified-01',
+								'menu_slug' => 'daextinma-http-status',
 						),
 					),
 					'more_items' => array(
-						array(
-							'link_text' => __( 'HTTP Status', 'daext-interlinks-manager' ),
-							'link_url'  => 'https://daext.com/interlinks-manager/#features',
-							'pro_badge' => true,
-						),
+							array(
+									'link_text' => __( 'Link Suggestions', 'daext-interlinks-manager' ),
+									'link_url'  => 'https://daext.com/interlinks-manager/#features',
+									'pro_badge' => true,
+							),
 						array(
 							'link_text' => __( 'Click Tracking', 'daext-interlinks-manager' ),
 							'link_url'  => 'https://daext.com/interlinks-manager/#features',
 							'pro_badge' => true,
 						),
+							array(
+									'link_text' => __( 'Automatic Links', 'daext-interlinks-manager' ),
+									'link_url'  => 'https://daext.com/interlinks-manager/#features',
+									'pro_badge' => true,
+							),
 						array(
 							'link_text' => __( 'Bulk Actions', 'daext-interlinks-manager' ),
 							'link_url'  => 'https://daext.com/interlinks-manager/#features',
 							'pro_badge' => true,
 						),
+
 						array(
-							'link_text' => __( 'Automatic Links', 'daext-interlinks-manager' ),
+							'link_text' => __( 'Link Categories', 'daext-interlinks-manager' ),
 							'link_url'  => 'https://daext.com/interlinks-manager/#features',
 							'pro_badge' => true,
 						),
 						array(
-							'link_text' => __( 'Links Categories', 'daext-interlinks-manager' ),
+							'link_text' => __( 'Target Groups', 'daext-interlinks-manager' ),
 							'link_url'  => 'https://daext.com/interlinks-manager/#features',
 							'pro_badge' => true,
 						),
 						array(
-							'link_text' => __( 'Term Groups', 'daext-interlinks-manager' ),
-							'link_url'  => 'https://daext.com/interlinks-manager/#features',
-							'pro_badge' => true,
-						),
-						array(
-							'link_text' => __( 'Tools', 'daext-interlinks-manager' ),
-							'link_url'  => 'https://daext.com/interlinks-manager/#features',
-							'pro_badge' => true,
-						),
-						array(
-							'link_text' => __( 'Maintenance', 'daext-interlinks-manager' ),
+							'link_text' => __( 'Import & Export', 'daext-interlinks-manager' ),
 							'link_url'  => 'https://daext.com/interlinks-manager/#features',
 							'pro_badge' => true,
 						),
@@ -187,6 +190,10 @@ class Daextinma_Admin {
 			if ( 'daextinma-juice' === $page_query_param ) {
 				require_once $this->shared->get( 'dir' ) . 'admin/inc/menu/child/class-daextinma-juice-menu-elements.php';
 				$this->menu_elements = new Daextinma_Juice_Menu_Elements( $this->shared, $page_query_param, $config );
+			}
+			if ( 'daextinma-http-status' === $page_query_param ) {
+				require_once $this->shared->get( 'dir' ) . 'admin/inc/menu/child/class-daextinma-http-status-menu-elements.php';
+				$this->menu_elements = new Daextinma_Http_Status_Menu_Elements( $this->shared, $page_query_param, $config );
 			}
 			if ( 'daextinma-options' === $page_query_param ) {
 				require_once $this->shared->get( 'dir' ) . 'admin/inc/menu/child/class-daextinma-options-menu-elements.php';
@@ -214,6 +221,13 @@ class Daextinma_Admin {
 
 		// Menu Juice.
 		if ( $screen->id === $this->screen_id_juice ) {
+
+			wp_enqueue_style( $this->shared->get( 'slug' ) . '-framework-menu', $this->shared->get( 'url' ) . 'admin/assets/css/framework-menu/main.css', array(), $this->shared->get( 'ver' ) );
+
+		}
+
+		// Menu Broken Links.
+		if ( $screen->id === $this->screen_id_http_status ) {
 
 			wp_enqueue_style( $this->shared->get( 'slug' ) . '-framework-menu', $this->shared->get( 'url' ) . 'admin/assets/css/framework-menu/main.css', array(), $this->shared->get( 'ver' ) );
 
@@ -324,6 +338,32 @@ class Daextinma_Admin {
 			);
 
 			wp_add_inline_script( $this->shared->get( 'slug' ) . '-juice-menu', $initialization_script, 'before' );
+
+			wp_enqueue_script( $this->shared->get( 'slug' ) . '-menu', $this->shared->get( 'url' ) . 'admin/assets/js/framework-menu/menu.js', array( 'jquery' ), $this->shared->get( 'ver' ), true );
+
+		}
+
+		// Menu Broken Links.
+		if ( $screen->id === $this->screen_id_http_status ) {
+
+			// Store the JavaScript parameters in the window.DAEXTREVOP_PARAMETERS object.
+			$initialization_script  = 'window.DAEXTINMA_PARAMETERS = {';
+			$initialization_script .= 'ajax_url: "' . admin_url( 'admin-ajax.php' ) . '",';
+			$initialization_script .= 'read_requests_nonce: "' . wp_create_nonce( 'daextrevop_read_requests_nonce' ) . '",';
+			$initialization_script .= 'admin_url: "' . get_admin_url() . '",';
+			$initialization_script .= 'site_url: "' . get_site_url() . '",';
+			$initialization_script .= 'plugin_url: "' . $this->shared->get( 'url' ) . '"';
+			$initialization_script .= '};';
+
+			wp_enqueue_script(
+					$this->shared->get( 'slug' ) . '-http-status-menu',
+					$this->shared->get( 'url' ) . 'admin/react/http-status-menu/build/index.js',
+					array( 'wp-element', 'wp-api-fetch', 'wp-i18n' ),
+					$this->shared->get( 'ver' ),
+					true
+			);
+
+			wp_add_inline_script( $this->shared->get( 'slug' ) . '-http-status-menu', $initialization_script, 'before' );
 
 			wp_enqueue_script( $this->shared->get( 'slug' ) . '-menu', $this->shared->get( 'url' ) . 'admin/assets/js/framework-menu/menu.js', array( 'jquery' ), $this->shared->get( 'ver' ), true );
 
@@ -532,7 +572,7 @@ class Daextinma_Admin {
 	 */
 	static public function ac_initialize_options() {
 
-		if ( intval( get_option( 'daextinma_options_version' ), 10 ) < 2 ) {
+		if ( intval( get_option( 'daextinma_options_version' ), 10 ) < 3 ) {
 
 			// assign an instance of Daextinma_Shared.
 			$shared = Daextinma_Shared::get_instance();
@@ -542,7 +582,7 @@ class Daextinma_Admin {
 			}
 
 			// Update options version.
-			update_option( 'daextinma_options_version', '2' );
+			update_option( 'daextinma_options_version', '3' );
 
 		}
 
@@ -556,7 +596,7 @@ class Daextinma_Admin {
 	static public function ac_create_database_tables() {
 
 		// check database version and create the database.
-		if ( intval( get_option( 'daextinma_database_version' ), 10 ) < 7 ) {
+		if ( intval( get_option( 'daextinma_database_version' ), 10 ) < 8 ) {
 
 			global $wpdb;
 
@@ -610,6 +650,24 @@ class Daextinma_Admin {
 
 			dbDelta( $sql );
 
+			// create *prefix*_http_status.
+			$sql = "CREATE TABLE {$wpdb->prefix}daextinma_http_status (
+                id bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                post_id bigint(20) NOT NULL DEFAULT '0',
+                post_title text NOT NULL DEFAULT '',
+                post_permalink text NOT NULL DEFAULT '',
+                post_edit_link text NOT NULL DEFAULT '',
+                url text NOT NULL DEFAULT '',
+                anchor text NOT NULL DEFAULT '',
+                checked tinyint(1) NOT NULL DEFAULT 0,
+                last_check_date datetime DEFAULT NULL,
+                last_check_date_gmt datetime DEFAULT NULL,
+                code text NOT NULL DEFAULT '',
+                code_description text NOT NULL DEFAULT ''
+            ) $charset_collate";
+
+			dbDelta( $sql );
+
 			/**
 			 * Delete the statistics. This is done to avoid the statistics with
 			 * previous db fields to be displayed in latest UI.
@@ -617,7 +675,7 @@ class Daextinma_Admin {
 			self::delete_statistics();
 
 			// Update database version.
-			update_option( 'daextinma_database_version', '7' );
+			update_option( 'daextinma_database_version', '8' );
 
 		}
 	}
@@ -738,10 +796,19 @@ class Daextinma_Admin {
 			array( $this, 'me_display_menu_juice' )
 		);
 
+		$this->screen_id_http_status = add_submenu_page(
+				$this->shared->get( 'slug' ) . '-dashboard',
+				esc_html__( 'IM - Broken Links', 'daext-interlinks-manager'),
+				esc_html__( 'Broken Links', 'daext-interlinks-manager'),
+				'edit_posts',
+				$this->shared->get( 'slug' ) . '-http-status',
+				array( $this, 'me_display_menu_http_status' )
+		);
+
 		$this->screen_id_options = add_submenu_page(
 			$this->shared->get( 'slug' ) . '-dashboard',
-			esc_html__( 'IM - Options', 'daext-interlinks-manager' ),
-			esc_html__( 'Options', 'daext-interlinks-manager' ),
+			esc_html__( 'IM - Settings', 'daext-interlinks-manager' ),
+			esc_html__( 'Settings', 'daext-interlinks-manager' ),
 			'manage_options',
 			$this->shared->get( 'slug' ) . '-options',
 			array( $this, 'me_display_menu_options' )
@@ -749,10 +816,10 @@ class Daextinma_Admin {
 
 		add_submenu_page(
 			$this->shared->get( 'slug' ) . '-dashboard',
-			esc_html__( 'Help & Support', 'daext-interlinks-manager' ),
-			esc_html__( 'Help & Support', 'daext-interlinks-manager' ) . '<i class="dashicons dashicons-external" style="font-size:12px;vertical-align:-2px;height:10px;"></i>',
+			esc_html__( 'Documentation', 'daext-interlinks-manager' ),
+			esc_html__( 'Documentation', 'daext-interlinks-manager' ) . '<i class="dashicons dashicons-external" style="font-size:12px;vertical-align:-2px;height:10px;"></i>',
 			'edit_posts',
-			'https://daext.com/kb-category/interlinks-manager/',
+			'https://daext.com/kb/interlinks-manager/',
 		);
 	}
 
@@ -768,6 +835,13 @@ class Daextinma_Admin {
 	 */
 	public function me_display_menu_juice() {
 		include_once 'view/juice.php';
+	}
+
+	/**
+	 * Includes the http status view.
+	 */
+	public function me_display_menu_http_status() {
+		include_once 'view/http_status.php';
 	}
 
 	/**
@@ -932,6 +1006,13 @@ class Daextinma_Admin {
 		) <= 1000000 ) {
 			update_post_meta( $post_id, '_daextinma_seo_power', intval( $_POST['daextinma_seo_power'], 10 ) );
 		}
+	}
+
+	/**
+	 * Plugin deactivation.
+	 */
+	static public function dc_deactivate() {
+		wp_clear_scheduled_hook( 'daextinma_cron_hook' );
 	}
 
 	/**

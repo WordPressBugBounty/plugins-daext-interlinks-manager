@@ -114,6 +114,17 @@ class Daextinma_Rest {
 			)
 		);
 
+		// Add the POST 'daext-interlinks-manager/v1/http-status/' endpoint to the Rest API.
+		register_rest_route(
+			'daext-interlinks-manager/v1',
+			'/http-status/',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'rest_api_daext_interlinks_manager_read_http_status_callback' ),
+				'permission_callback' => array( $this, 'rest_api_daext_interlinks_manager_read_http_status_callback_permission_check' ),
+			)
+		);
+
 		// Add the POST 'daext-interlinks-manager/v1/dashboard-menu-export-csv/' endpoint to the Rest API.
 		register_rest_route(
 			'interlinks-manager-pro/v1',
@@ -144,6 +155,17 @@ class Daextinma_Rest {
 				'methods'             => 'POST',
 				'callback'            => array( $this, 'rest_api_interlinks_manager_pro_anchors_menu_export_csv_callback' ),
 				'permission_callback' => array( $this, 'rest_api_interlinks_manager_pro_read_juice_callback_permission_check' ),
+			)
+		);
+
+		// Add the POST 'daext-interlinks-manager/v1/http-status-menu-export-csv/' endpoint to the Rest API.
+		register_rest_route(
+			'daext-interlinks-manager/v1',
+			'/http-status-menu-export-csv/',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'rest_api_daext_interlinks_manager_http_status_menu_export_csv_callback' ),
+				'permission_callback' => array( $this, 'rest_api_daext_interlinks_manager_read_http_status_callback_permission_check' ),
 			)
 		);
 
@@ -233,6 +255,7 @@ class Daextinma_Rest {
 		$options['daextinma_limit_posts_analysis']                 = $request->get_param( 'daextinma_limit_posts_analysis' ) !== null ? intval( $request->get_param( 'daextinma_limit_posts_analysis' ), 10 ) : null;
 		$options['daextinma_dashboard_post_types']                 = $request->get_param( 'daextinma_dashboard_post_types' ) !== null && is_array( $request->get_param( 'daextinma_dashboard_post_types' ) ) ? array_map( 'sanitize_text_field', $request->get_param( 'daextinma_dashboard_post_types' ) ) : null;
 		$options['daextinma_juice_post_types']                     = $request->get_param( 'daextinma_juice_post_types' ) !== null && is_array( $request->get_param( 'daextinma_juice_post_types' ) ) ? array_map( 'sanitize_text_field', $request->get_param( 'daextinma_juice_post_types' ) ) : null;
+		$options['daextinma_http_status_post_types']   = $request->get_param( 'daextinma_http_status_post_types' ) !== null && is_array($request->get_param( 'daextinma_http_status_post_types' )) ? array_map( 'sanitize_text_field', $request->get_param( 'daextinma_http_status_post_types' ) ) : null;
 		$options['daextinma_internal_links_data_update_frequency'] = $request->get_param( 'daextinma_internal_links_data_update_frequency' ) !== null ? sanitize_key( $request->get_param( 'daextinma_internal_links_data_update_frequency' ) ) : null;
 		$options['daextinma_juice_data_update_frequency']          = $request->get_param( 'daextinma_juice_data_update_frequency' ) !== null ? sanitize_key( $request->get_param( 'daextinma_juice_data_update_frequency' ) ) : null;
 
@@ -245,6 +268,11 @@ class Daextinma_Rest {
 		// Meta boxes.
 		$options['daextinma_interlinks_options_post_types']      = $request->get_param( 'daextinma_interlinks_options_post_types' ) !== null && is_array( $request->get_param( 'daextinma_interlinks_options_post_types' ) ) ? array_map( 'sanitize_text_field', $request->get_param( 'daextinma_interlinks_options_post_types' ) ) : null;
 		$options['daextinma_interlinks_optimization_post_types'] = $request->get_param( 'daextinma_interlinks_optimization_post_types' ) !== null && is_array( $request->get_param( 'daextinma_interlinks_optimization_post_types' ) ) ? array_map( 'sanitize_text_field', $request->get_param( 'daextinma_interlinks_optimization_post_types' ) ) : null;
+
+		// Broken Links.
+		$options['daextinma_http_status_checks_per_iteration']   = $request->get_param( 'daextinma_http_status_checks_per_iteration' ) !== null ? intval( $request->get_param( 'daextinma_http_status_checks_per_iteration' ), 10 ) : null;
+		$options['daextinma_http_status_cron_schedule_interval'] = $request->get_param( 'daextinma_http_status_cron_schedule_interval' ) !== null ? intval( $request->get_param( 'daextinma_http_status_cron_schedule_interval' ), 10 ) : null;
+		$options['daextinma_http_status_request_timeout']        = $request->get_param( 'daextinma_http_status_request_timeout' ) !== null ? intval( $request->get_param( 'daextinma_http_status_request_timeout' ), 10 ) : null;
 
 		foreach ( $options as $key => $option ) {
 			if ( null !== $option ) {
@@ -648,6 +676,244 @@ class Daextinma_Rest {
 	}
 
 	/**
+	 * Callback for the POST 'daext-interlinks-manager/v1/http-status' endpoint of the Rest API.
+	 *
+	 * This method is in the following contexts:
+	 *
+	 * - In the "Broken Links" menu to retrieve the statistics of the internal links on the posts.
+	 *
+	 * @param object $request The request data.
+	 *
+	 * @return WP_Error|WP_REST_Response
+	 */
+	public function rest_api_daext_interlinks_manager_read_http_status_callback( $request ) {
+
+		$data_update_required = intval( $request->get_param( 'data_update_required' ), 10 );
+
+		if ( 0 === $data_update_required ) {
+
+			// Use the provided form data.
+			$status_code    = sanitize_key( $request->get_param( 'status_code' ) );
+			$search_string  = sanitize_text_field( $request->get_param( 'search_string' ) );
+			$sorting_column = sanitize_text_field( $request->get_param( 'sorting_column' ) );
+			$sorting_order  = sanitize_text_field( $request->get_param( 'sorting_order' ) );
+
+		} else {
+
+			// Set the default values of the form data.
+			$status_code    = 'all';
+			$search_string  = '';
+			$sorting_column = 'last_check_date';
+			$sorting_order  = 'desc';
+
+			// Update the Broken Links Archive.
+			$this->shared->update_http_status_archive();
+
+		}
+
+		// Create the WHERE part of the query based on the $optimization_status value.
+		global $wpdb;
+		switch ( $status_code ) {
+			case 0:
+				$filter = '';
+				break;
+			default:
+				$filter = 'WHERE code = $status_code';
+				break;
+		}
+
+		// status code.
+		if ( ! is_null( $status_code ) &&
+		     ( trim( $status_code ) !== 'all' ) ) {
+
+			switch ( trim( $status_code ) ) {
+
+				case 'unknown':
+					$filter = "WHERE code = ''";
+					break;
+
+				case '1xx':
+					$filter  = "WHERE (code = '100'";
+					$filter .= " OR code = '101'";
+					$filter .= " OR code = '102'";
+					$filter .= " OR code = '103')";
+					break;
+
+				case '2xx':
+					$filter  = "WHERE (code = '200'";
+					$filter .= " OR code = '201'";
+					$filter .= " OR code = '202'";
+					$filter .= " OR code = '203'";
+					$filter .= " OR code = '204'";
+					$filter .= " OR code = '205'";
+					$filter .= " OR code = '206'";
+					$filter .= " OR code = '207'";
+					$filter .= " OR code = '208'";
+					$filter .= " OR code = '226')";
+					break;
+
+				case '3xx':
+					$filter  = "WHERE (code = '300'";
+					$filter .= " OR code = '301'";
+					$filter .= " OR code = '302'";
+					$filter .= " OR code = '303'";
+					$filter .= " OR code = '304'";
+					$filter .= " OR code = '305'";
+					$filter .= " OR code = '305'";
+					$filter .= " OR code = '306'";
+					$filter .= " OR code = '307'";
+					$filter .= " OR code = '308')";
+					break;
+
+				case '4xx':
+					$filter  = "WHERE (code = '400'";
+					$filter .= " OR code = '401'";
+					$filter .= " OR code = '402'";
+					$filter .= " OR code = '403'";
+					$filter .= " OR code = '404'";
+					$filter .= " OR code = '405'";
+					$filter .= " OR code = '406'";
+					$filter .= " OR code = '407'";
+					$filter .= " OR code = '408'";
+					$filter .= " OR code = '409'";
+					$filter .= " OR code = '410'";
+					$filter .= " OR code = '411'";
+					$filter .= " OR code = '412'";
+					$filter .= " OR code = '413'";
+					$filter .= " OR code = '414'";
+					$filter .= " OR code = '415'";
+					$filter .= " OR code = '416'";
+					$filter .= " OR code = '417'";
+					$filter .= " OR code = '418'";
+					$filter .= " OR code = '421'";
+					$filter .= " OR code = '422'";
+					$filter .= " OR code = '423'";
+					$filter .= " OR code = '424'";
+					$filter .= " OR code = '426'";
+					$filter .= " OR code = '428'";
+					$filter .= " OR code = '429'";
+					$filter .= " OR code = '431'";
+					$filter .= " OR code = '451')";
+
+					break;
+
+				case '5xx':
+					$filter  = "WHERE (code = '500'";
+					$filter .= " OR code = '501'";
+					$filter .= " OR code = '502'";
+					$filter .= " OR code = '503'";
+					$filter .= " OR code = '504'";
+					$filter .= " OR code = '505'";
+					$filter .= " OR code = '506'";
+					$filter .= " OR code = '507'";
+					$filter .= " OR code = '508'";
+					$filter .= " OR code = '510'";
+					$filter .= " OR code = '511')";
+
+					break;
+
+			}
+		} else {
+			$filter = '';
+		}
+
+		// Create the WHERE part of the string based on the $search_string value.
+		if ( '' !== $search_string ) {
+			if ( strlen( $filter ) === 0 ) {
+				$filter .= $wpdb->prepare( 'WHERE (post_title LIKE %s)', '%' . $search_string . '%' );
+			} else {
+				$filter .= $wpdb->prepare( ' AND (post_title LIKE %s)', '%' . $search_string . '%' );
+
+			}
+		}
+
+		// Create the ORDER BY part of the query based on the $sorting_column and $sorting_order values.
+		if ( '' !== $sorting_column ) {
+			$filter .= $wpdb->prepare( ' ORDER BY %i', $sorting_column );
+		} else {
+			$filter .= ' ORDER BY last_check_date';
+		}
+
+		if ( 'desc' === $sorting_order ) {
+			$filter .= ' DESC';
+		} else {
+			$filter .= ' ASC';
+		}
+
+		/**
+		 * Check in the "_http_status" db table if all the links have been checked. (if there are zero links to
+		 * check)
+		 */
+		global $wpdb;
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery
+		$count       = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}daextinma_http_status WHERE checked = 0" );
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery
+		$count_total = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}daextinma_http_status" );
+
+		// Get the data from the "_archive" db table using $wpdb and put them in the $response array.
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $filter is prepared.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery
+		$requests   = $wpdb->get_results(
+			"SELECT *
+			FROM {$wpdb->prefix}daextinma_http_status $filter"
+		);
+		// phpcs:enable
+
+		if ( is_array( $requests ) && count( $requests ) > 0 ) {
+
+			/**
+			 * Add the formatted date (based on the date format defined in the WordPress settings) to the $requests
+			 * array.
+			 */
+			foreach ( $requests as $key => $request ) {
+				$requests[ $key ]->formatted_last_check_date = mysql2date( get_option('date_format') . ' ' . get_option('time_format') , $request->last_check_date );
+			}
+
+			$response = array(
+				'statistics' => array(
+					'all_posts'            => count( $requests ),
+					'successful_responses' => $this->shared->get_successful_responses( $requests ),
+				),
+				'table'      => $requests,
+			);
+		} else {
+			$response = array(
+				'statistics' => array(
+					'all_posts'            => 0,
+					'successful_responses' => 0,
+				),
+				'table'      => array(),
+			);
+		}
+
+		// Prepare the response.
+		$response = new WP_REST_Response( $response );
+
+		return $response;
+	}
+
+	/**
+	 * Check the user capability.
+	 *
+	 * @return true|WP_Error
+	 */
+	public function rest_api_daext_interlinks_manager_read_http_status_callback_permission_check() {
+
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			return new WP_Error(
+				'rest_update_error',
+				'Sorry, you are not allowed to read the Interlinks Manager statistics.',
+				array( 'status' => 403 )
+			);
+		}
+
+		return true;
+
+	}
+
+	/**
 	 * Callback for the POST 'interlinks-manager-pro/v1/dashboard-menu-export-csv' endpoint of the Rest API.
 	 *
 	 * This method is in the following contexts:
@@ -685,14 +951,16 @@ class Daextinma_Rest {
 			$csv_content .= '"' . $this->shared->esc_csv( __( 'Date', 'daext-interlinks-manager' ) ) . '",';
 			$csv_content .= '"' . $this->shared->esc_csv( __( 'Type', 'daext-interlinks-manager' ) ) . '",';
 			$csv_content .= '"' . $this->shared->esc_csv( __( 'Length', 'daext-interlinks-manager' ) ) . '",';
-			$csv_content .= '"' . $this->shared->esc_csv( __( 'Int. Links', 'daext-interlinks-manager' ) ) . '",';
-			$csv_content .= '"' . $this->shared->esc_csv( __( 'Int. Inbound Links', 'daext-interlinks-manager' ) ) . '",';
-			$csv_content .= '"' . $this->shared->esc_csv( __( 'Recomm.', 'daext-interlinks-manager' ) ) . '",';
-			$csv_content .= '"' . $this->shared->esc_csv( __( 'Opt.', 'daext-interlinks-manager' ) ) . '"';
+			$csv_content .= '"' . $this->shared->esc_csv( __( 'Internal Links', 'daext-interlinks-manager' ) ) . '",';
+			$csv_content .= '"' . $this->shared->esc_csv( __( 'Inbound Links', 'daext-interlinks-manager' ) ) . '",';
+			$csv_content .= '"' . $this->shared->esc_csv( __( 'Status', 'daext-interlinks-manager' ) ) . '"';
 			$csv_content .= $new_line;
 
 			// set column content.
 			foreach ( $results as $result ) {
+
+				$status_text = 1 === intval( $result['optimization'], 10 ) ? __( 'Optimized', 'daext-interlinks-manager' ) : __( 'Not Optimized', 'daext-interlinks-manager' );
+				$status_text .= ' (' . $result['manual_interlinks'] . ' ' . __( 'of', 'daext-interlinks-manager' ) . ' ' . $result['recommended_interlinks'] . ')';
 
 				$csv_content .= '"' . $this->shared->esc_csv( $result['post_title'] ) . '",';
 				$csv_content .= '"' . $this->shared->esc_csv( mysql2date( get_option( 'date_format' ), $result['post_date'] ) ) . '",';
@@ -700,8 +968,7 @@ class Daextinma_Rest {
 				$csv_content .= '"' . $this->shared->esc_csv( $result['content_length'] ) . '",';
 				$csv_content .= '"' . $this->shared->esc_csv( $result['manual_interlinks'] ) . '",';
 				$csv_content .= '"' . $this->shared->esc_csv( $result['iil'] ) . '",';
-				$csv_content .= '"' . $this->shared->esc_csv( $result['recommended_interlinks'] ) . '",';
-				$csv_content .= '"' . $this->shared->esc_csv( $result['optimization'] ) . '"';
+				$csv_content .= '"' . $this->shared->esc_csv( $status_text ) . '"';
 				$csv_content .= $new_line;
 
 			}
@@ -754,7 +1021,7 @@ class Daextinma_Rest {
 
 			// set headings.
 			$csv_content .= '"' . $this->shared->esc_csv( __( 'URL', 'daext-interlinks-manager' ) ) . '",';
-			$csv_content .= '"' . $this->shared->esc_csv( __( 'Internal Inbound Links', 'daext-interlinks-manager' ) ) . '",';
+			$csv_content .= '"' . $this->shared->esc_csv( __( 'Inbound Links', 'daext-interlinks-manager' ) ) . '",';
 			$csv_content .= '"' . $this->shared->esc_csv( __( 'Link Equity', 'daext-interlinks-manager' ) ) . '"';
 			$csv_content .= $new_line;
 
@@ -841,6 +1108,72 @@ class Daextinma_Rest {
 				$csv_content .= '"' . $this->shared->esc_csv( $result['anchor'] ) . '",';
 				$csv_content .= '"' . $this->shared->esc_csv( $result['juice'] ) . '"';
 
+				$csv_content .= $new_line;
+
+			}
+		} else {
+			return false;
+		}
+
+		$response = array(
+			'csv_content' => $csv_content,
+		);
+
+		// Prepare the response.
+		$response = new WP_REST_Response( $response );
+
+		return $response;
+	}
+
+	/**
+	 * Callback for the POST 'daext-interlinks-manager/v1/http-status-menu-export-csv' endpoint of the Rest API.
+	 *
+	 * This method is in the following contexts:
+	 *
+	 * - In the "Broken Links" menu to download the broken links statistics when the "Export" button is clicked.
+	 *
+	 * @return WP_Error|WP_REST_Response
+	 */
+	public function rest_api_daext_interlinks_manager_http_status_menu_export_csv_callback() {
+
+		// Set the PHP "Max Execution Time" and "Memory Limit" based on the values defined in the options.
+		$this->shared->set_met_and_ml();
+
+		// get the data from the db table.
+		global $wpdb;
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery
+		$results    = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}daextinma_http_status ORDER BY last_check_date DESC", ARRAY_A );
+
+		// if there are data generate the csv header and content.
+		if ( count( $results ) > 0 ) {
+
+			$csv_content = '';
+			$new_line    = "\n";
+
+			// set the csv header.
+			header( 'Content-Encoding: UTF-8' );
+			header( 'Content-type: text/csv; charset=UTF-8' );
+			header( 'Content-Disposition: attachment; filename=http-response-' . time() . '.csv' );
+			header( 'Pragma: no-cache' );
+			header( 'Expires: 0' );
+
+			// set headings.
+			$csv_content .= '"' . $this->shared->esc_csv( __( 'Post', 'daext-interlinks-manager') ) . '",';
+			$csv_content .= '"' . $this->shared->esc_csv( __( 'Anchor Text', 'daext-interlinks-manager') ) . '",';
+			$csv_content .= '"' . $this->shared->esc_csv( __( 'URL', 'daext-interlinks-manager') ) . '",';
+			$csv_content .= '"' . $this->shared->esc_csv( __( 'Status Code', 'daext-interlinks-manager') ) . '",';
+			$csv_content .= '"' . $this->shared->esc_csv( __( 'Last Check', 'daext-interlinks-manager') ) . '"';
+			$csv_content .= $new_line;
+
+			// set column content.
+			foreach ( $results as $result ) {
+
+				$csv_content .= '"' . $this->shared->esc_csv( $result['post_title'] ) . '",';
+				$csv_content .= '"' . $this->shared->esc_csv( $result['anchor'] ) . '",';
+				$csv_content .= '"' . $this->shared->esc_csv( $result['url'] ) . '",';
+				$csv_content .= '"' . $this->shared->esc_csv( $result['code'] . ' ' . $result['code_description'] ) . '",';
+				$csv_content .= '"' . $this->shared->esc_csv( mysql2date( get_option('date_format') . ' ' . get_option('time_format'), $result['last_check_date'] ) ) . '"';
 				$csv_content .= $new_line;
 
 			}

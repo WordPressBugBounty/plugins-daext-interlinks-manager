@@ -26,6 +26,52 @@ const Chart = (props) => {
 
     }
 
+    /**
+     * Format the internal links status as "X of Y", where X is the total number of internal links (manual + auto)
+     * and Y is the recommended number of internal links based on content length.
+     */
+    function formatInternalLinksStatus(manualInterlinks, recommendedInterlinks) {
+
+        const internalLinks = parseInt(manualInterlinks, 10);
+
+        return internalLinks + ' of ' + recommendedInterlinks;
+
+    }
+
+    /**
+     * Return the CSS class for the internal links optimization status icon.
+     *
+     * 1 => Green circle (optimized)
+     * 0 => Red circle (not optimized)
+     *
+     * No data => Grey circle (not currently used in this context).
+     */
+    function getInternalLinksStatusClass(optimization) {
+
+        let color_code_class = '';
+        if (parseInt(optimization, 10) === 1) {
+            color_code_class = 'daextinma-react-table__check-circle';
+        } else {
+            color_code_class = 'daextinma-react-table__x-circle';
+        }
+
+        return color_code_class;
+
+    }
+
+    /**
+     * Build the tooltip text for the internal links status cell.
+     *
+     * Example: "2 internal links. Recommended: 7."
+     */
+    function getInternalLinksTooltip(manualInterlinks, recommendedInterlinks) {
+
+        const internalLinks = parseInt(manualInterlinks, 10);
+
+        return internalLinks + ' internal links. Recommended: ' + recommendedInterlinks + '.';
+
+    }
+
     return (
 
         <div className="daextinma-data-table-container">
@@ -39,6 +85,7 @@ const Chart = (props) => {
                             onClick={props.handleSortingChanges}
                             value={'post_title'}
                             data-icon={handleDataIcon('post_title')}
+                            title={__('The title of the post or page.', 'daext-interlinks-manager')}
                         >{__('Post', 'daext-interlinks-manager')}</button>
                     </th>
                     <th>
@@ -47,6 +94,7 @@ const Chart = (props) => {
                             onClick={props.handleSortingChanges}
                             value={'post_date'}
                             data-icon={handleDataIcon('post_date')}
+                            title={__('The publication date of the post or page.', 'daext-interlinks-manager')}
                         >{__('Date', 'daext-interlinks-manager')}</button>
                     </th>
                     <th>
@@ -55,6 +103,7 @@ const Chart = (props) => {
                             onClick={props.handleSortingChanges}
                             value={'post_type'}
                             data-icon={handleDataIcon('post_type')}
+                            title={__('The content type (e.g. post or page).', 'daext-interlinks-manager')}
                         >{__('Type', 'daext-interlinks-manager')}</button>
                     </th>
                     <th>
@@ -63,6 +112,7 @@ const Chart = (props) => {
                             onClick={props.handleSortingChanges}
                             value={'content_length'}
                             data-icon={handleDataIcon('content_length')}
+                            title={__('The content length of the post in characters.', 'daext-interlinks-manager')}
                         >{__('Length', 'daext-interlinks-manager')}</button>
                     </th>
                     <th>
@@ -71,7 +121,8 @@ const Chart = (props) => {
                             onClick={props.handleSortingChanges}
                             value={'manual_interlinks'}
                             data-icon={handleDataIcon('manual_interlinks')}
-                        >{__('Int. Links', 'daext-interlinks-manager')}</button>
+                            title={__('The number of internal links in the post content.', 'daext-interlinks-manager')}
+                        >{__('Internal Links', 'daext-interlinks-manager')}</button>
                     </th>
                     <th>
                         <button
@@ -79,15 +130,8 @@ const Chart = (props) => {
                             onClick={props.handleSortingChanges}
                             value={'iil'}
                             data-icon={handleDataIcon('iil')}
-                        >{__('Int. Inbound Links', 'daext-interlinks-manager')}</button>
-                    </th>
-                    <th>
-                        <button
-                            className={'daextinma-react-table__daextinma-sorting-button'}
-                            onClick={props.handleSortingChanges}
-                            value={'recommended_interlinks'}
-                            data-icon={handleDataIcon('recommended_interlinks')}
-                        >{__('Recomm.', 'daext-interlinks-manager')}</button>
+                            title={__('The number of internal links pointing to this post from other content.', 'daext-interlinks-manager')}
+                        >{__('Inbound Links', 'daext-interlinks-manager')}</button>
                     </th>
                     <th>
                         <button
@@ -95,7 +139,8 @@ const Chart = (props) => {
                             onClick={props.handleSortingChanges}
                             value={'optimization'}
                             data-icon={handleDataIcon('optimization')}
-                        >{__('Opt.', 'daext-interlinks-manager')}</button>
+                            title={__('Indicates whether the number of internal links is within the recommended range based on content length.', 'daext-interlinks-manager')}
+                        >{__('Status', 'interlinks-manager')}</button>
                     </th>
                 </tr>
                 </thead>
@@ -117,8 +162,21 @@ const Chart = (props) => {
                         <td>{row.content_length}</td>
                         <td>{row.manual_interlinks}</td>
                         <td>{row.iil}</td>
-                        <td>{row.recommended_interlinks}</td>
-                        <td>{row.optimization}</td>
+                        <td>
+                            <div
+                                className={'daextinma-react-table__post-cell-container'}
+                                title={getInternalLinksTooltip(
+                                    row.manual_interlinks,
+                                    row.recommended_interlinks
+                                )}
+                            >
+                                <div className={'daextinma-circle ' + getInternalLinksStatusClass(row.optimization)}></div>
+                                {formatInternalLinksStatus(
+                                    row.manual_interlinks,
+                                    row.recommended_interlinks
+                                )}
+                            </div>
+                        </td>
                     </tr>
                 ))}
 

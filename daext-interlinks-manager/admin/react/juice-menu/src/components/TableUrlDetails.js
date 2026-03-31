@@ -43,9 +43,15 @@ const Chart = (props) => {
             <table className="daextinma-react-table__daextinma-data-table">
                 <thead>
                 <tr>
-                    <th>{__('Post', 'daext-interlinks-manager')}</th>
-                    <th>{__('Anchor Text', 'daext-interlinks-manager')}</th>
-                    <th>{__('Link Equity', 'daext-interlinks-manager')}</th>
+                    <th
+                        title={__('The post where the link is located.', 'daext-interlinks-manager')}
+                    >{__('Post', 'daext-interlinks-manager')}</th>
+                    <th
+                        title={__('The anchor text of the link.', 'daext-interlinks-manager')}
+                    >{__('Anchor Text', 'daext-interlinks-manager')}</th>
+                    <th
+                        title={__('The amount of link equity that the link is passing to the target page.', 'daext-interlinks-manager')}
+                    >{__('Link Equity', 'daext-interlinks-manager')}</th>
                 </tr>
                 </thead>
                 <tbody>

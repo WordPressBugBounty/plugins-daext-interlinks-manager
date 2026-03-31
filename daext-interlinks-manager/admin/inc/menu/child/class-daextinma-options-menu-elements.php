@@ -23,8 +23,8 @@ class Daextinma_Options_Menu_Elements extends Daextinma_Menu_Elements {
 
 		$this->menu_slug          = 'options';
 		$this->slug_plural        = 'options';
-		$this->label_singular     = __( 'Options', 'daext-interlinks-manager' );
-		$this->label_plural       = __( 'Options', 'daext-interlinks-manager' );
+		$this->label_singular     = __( 'Settings', 'daext-interlinks-manager' );
+		$this->label_plural       = __( 'Settings', 'daext-interlinks-manager' );
 		$this->primary_key        = 'category_id';
 		$this->db_table           = 'category';
 		$this->list_table_columns = array(

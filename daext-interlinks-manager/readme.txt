@@ -5,54 +5,53 @@ Donate link: https://daext.com
 Requires at least: 4.6
 Tested up to: 6.9
 Requires PHP: 5.3
-Stable tag: 1.17
+Stable tag: 1.18
 License: GPLv3
 
 Interlinks Manager is an SEO WordPress plugin that gives you the ability to monitor and optimize your internal links.
 
 == Description ==
-Interlinks Manager is an SEO WordPress plugin that gives you the ability to monitor and optimize your internal links.
+[Interlinks Manager](https://daext.com/interlinks-manager/) is an SEO WordPress plugin that gives you the ability to monitor and optimize your internal links.
 
-This plugin first generates the internal links data with powerful PHP regular expressions applied to your content and then analyzes these data to provide you valuable information.
+This plugin first generates the internal links data using PHP regular expressions applied to your content and then analyzes the resulting data to provide valuable information.
 
 Specifically, the plugin adds to WordPress the following features:
 
 * Internal links analysis
-* Link juice analysis
-* An algorithm that detects the internal links optimization status
+* Link equity analysis
+* An algorithm that evaluates the internal links optimization status
+* HTTP status code analysis to detect internal links that lead to broken pages, redirects, and other problematic responses
 
 ## Pro Version
 
-For SEO professionals, we also distribute the [Pro Version](https://daext.com/interlinks-manager/) with a 30-day money-back guarantee formula.
+A [Pro Version](https://daext.com/interlinks-manager/) is also available with additional features, including:
 
-Here is a list of some of the many features that you can get by upgrading:
-
-* An internal links suggestions feature to receive relevant internal links suggestions and speed up your internal links building sessions.
-* An advanced automatic internal links system to create internal links based on the specified keywords.
-* A report of all the visits generated from the clicks on the internal links.
-* The ability to export the internal links data and the link juice data in CSV format.
+* An internal link suggestions feature to receive relevant suggestions and assist with your internal linking workflow.
+* A system to automatically create internal links based on specified keywords.
+* A report of all visits generated from clicks on internal links.
+* The ability to import and export plugin data and settings to back up configurations or quickly set up the plugin on multiple websites.
 
 ## Monitor your internal links
 
-Keep track of all the internal links available in your articles with the **Dashboard** menu. Here you will find a list of all your articles and the internal links information retrieved by the plugin, such as the content length, the number of internal links, the recommended number of internal links, and the optimization status.
+Keep track of all the internal links available in your articles with the **Dashboard** menu. Here you will find a list of your articles along with internal link data retrieved by the plugin, such as the current number of internal links, the recommended number of internal links, the inbound links received, and the optimization status.
 
-The **Filter & Sort** section included in this menu will allow you to search through these data, filter them, or sort the data based on specific criteria. For example, you can use this section to find all the non-optimized articles and work on their optimization.
+The **Filter & Sort** section included in this menu will allow you to search through this data, filter them, or sort the data based on specific criteria. For example, you can use this section to find all the non-optimized articles and work on their optimization.
 
-## Calculate the link juice
+## Calculate the link equity
 
-Visit the **Juice** menu to receive an estimate of the link juice for all the URLs linked in your articles.
+Visit the **Link Equity** menu to receive an estimate of the link equity for all the URLs linked in your articles.
 
-Use the information available in this menu to improve the distribution of link juice, empower your [cornerstone articles](https://yoast.com/what-is-cornerstone-content/), or improve the SEO performance of your product pages.
-
-For the most demanding SEO specialists, there is also the possibility to list all the links that contribute to creating the overall link juice associated with each URL.
+Use the information available in this menu to improve the distribution of link equity, empower your cornerstone articles, or improve the SEO performance of your product pages.
 
 ## Optimize the number of internal links
 
-Receive information about the optimization status of the internal links while you edit an article with the **Interlinks Optimization** meta box.
+Receive information about the optimization status of the internal links while you edit an article with the **Internal Links Optimization** panel.
 
-This meta box will give you clear and precise information on making the article optimized in terms of internal links. For example, you will receive messages like "The number of internal links included in this post is optimized." or "The number of internal links should be included between 4 and 6", etc.
+This panel provides information on how to optimize the article's internal links. For example, you will receive messages like "The number of internal links in this post is within the recommended range." or "The number of internal links should be between 4 and 6", etc.
 
-Please note that this feature works best when combined with the **Interlinks Suggestions** functionality available in the [Pro Version](https://daext.com/interlinks-manager/).
+## Find Broken Links and Redirects
+
+Analyze the HTTP response of your internal links to detect issues affecting your site. Identify links that lead to unavailable pages, redirects, or other HTTP status issues.
 
 ## Customize the plugin behavior
 
@@ -60,11 +59,11 @@ Please note that this feature works best when combined with the **Interlinks Sug
 
 Change the values of the **Characters per Interlink** and the **Optimization Delta** options to modify the results generated by the algorithm used to measure the optimization status of the articles.
 
-### Customize the algorithm used to calculate the link juice
+### Customize the algorithm used to calculate the link equity
 
-Use the options in the **Juice** section of the plugin options to customize the calculation of the link juice.
+Use the options in the **Link Equity** section of the plugin options to customize the calculation of the link equity.
 
-For instance, you can set default **SEO Power** of all the pages, set a custom **Penality per Position**, aggregate the link juice of URLs with different anchors, aggregate the link juice of the URLs with parameters.
+For instance, you can set default **Total Link Equity** of all the pages, set a custom **Position Penalty**, aggregate the link equity of URLs with different anchors, aggregate the link equity of the URLs with parameters.
 
 ### Configure the PHP memory, the maximum execution time, and the analyzed post types
 
@@ -72,44 +71,38 @@ If your website has many articles, you have options that control the technical a
 
 For example, you can set a custom PHP memory size and increase the maximum execution time with the script used by the plugin, limit the number of analyzed articles, restrict the analysis to specific post types, and more.
 
-Thanks to these options, you can handle any scenario, even blogs with 100k+ posts.
+These options help support larger websites, including those with 100k+ posts.
 
-### Enable the plugin meta boxes only on specific post types
+### Enable the plugin editor panels only on specific post types
 
-You can use the options in the **Meta Boxes** to display or hide the **Interlinks Options** and the **Interlinks Optimization** meta boxes only with specific post types.
+You can use the options in the **Editor Panels** to display or hide the **Internal Links Settings** and the **Internal Links Optimization** panels only with specific post types.
 
-### Assign a custom links juice to specific posts
+### Assign a custom total link equity to specific posts
 
-The plugin allows you to assign each article a parameter used to calculate the link juice named **SEO Power**.
+The plugin allows you to assign each article a parameter used to calculate the link equity named **Total Link Equity**.
 
-Configure this constant with a realistic value to improve the accuracy of the link juice.
+Configure this constant with a realistic value to improve the accuracy of the link equity.
 
 == Installation ==
-= Installation (Single Site) =
 
-With this procedure you will be able to install the Interlinks Manager plugin on your WordPress website:
+1. Upload the plugin files to the `/wp-content/plugins/daext-interlinks-manager/` directory, or install the plugin through the WordPress Plugins screen directly.
+2. Activate the plugin through the Plugins screen in WordPress.
 
-1. Visit the **Plugins -> Add New** menu
-2. Click on the **Upload Plugin** button and select the zip file you just downloaded
-3. Click on **Install Now**
-4. Click on **Activate Plugin**
+### 1. Monitor your internal links
 
-= Installation (Multisite) =
+The plugin provides dedicated menus to help you analyze the internal links of your website:
 
-This plugin supports both a **Network Activation** (the plugin will be activated on all the sites of your WordPress Network) and a **Single Site Activation** in a **WordPress Network** environment (your plugin will be activated on a single site of the network).
+* The **Dashboard** gives you an overview of all the internal links in your articles and their optimization status.
+* The **Link Equity** menu provides an estimate of the link equity of all the URLs linked in your content.
+* The **Broken Links** menu helps you identify broken internal links, redirects, and other problematic or unoptimized links.
 
-With this procedure you will be able to perform a **Network Activation**:
+Internal links data can also be exported in CSV format for further analysis or to create custom reports.
 
-1. Visit the **Plugins -> Add New** menu
-2. Click on the **Upload Plugin** button and select the zip file you just downloaded
-3. Click on **Install Now**
-4. Click on **Network Activate**
+### 2. Optimize your internal links
 
-With this procedure you will be able to perform a **Single Site Activation** in a **WordPress Network** environment:
+Use the information provided by the plugin in the dedicated menus to improve the internal links of your website, the distribution of link equity, and correct errors. While editing your page, you can use the Internal Links Optimization panel to receive real-time information about the optimization of the article you are working on.
 
-1. Visit the specific site of the **WordPress Network** where you want to install the plugin
-2. Visit the **Plugins** menu
-3. Click on the **Activate** button (just below the name of the plugin)
+For detailed guidance and advanced configuration, visit the [official Knowledge Base](https://daext.com/kb/interlinks-manager/).
 
 == Frequently Asked Questions ==
 
@@ -118,6 +111,14 @@ With this procedure you will be able to perform a **Single Site Activation** in 
 The plugin works with the Gutenberg editor. However, it might not find all the internal links with page builders that don't save the post HTML in the **[prefix]_posts** database table.
 
 == Changelog ==
+
+= 1.18 =
+
+*Mar 31, 2026*
+
+* Improved UI in the "Dashboard" and "Link Equity" menus.
+* Added the new "Broken Links" menu, which allows you to check the HTTP status codes of internal links.
+* Additional minor improvements.
 
 = 1.17 =
 
@@ -216,8 +217,8 @@ The plugin works with the Gutenberg editor. However, it might not find all the i
 
 == Screenshots ==
 1. Dashboard menu
-2. Juice menu
-3. Juice menu (Single links)
+2. Link Equity menu
+3. Link Equity menu (Single links)
 4. Options menu in the "Link Analysis" tab
 5. Options menu in the "Technical Options" section
 6. Options menu in the "Advanced" tab

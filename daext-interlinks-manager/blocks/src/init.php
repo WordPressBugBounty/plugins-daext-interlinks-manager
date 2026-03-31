@@ -105,7 +105,7 @@ function daextinma_editor_assets() {
  *
  * See: https://developer.wordpress.org/reference/functions/register_post_meta/
  */
-function interlinks_manager_register_post_meta() {
+function daextinma_register_post_meta() {
 
 	// Assign an instance of the plugin shared class.
 	$plugin_dir = substr( plugin_dir_path( __FILE__ ), 0, - 11 );
@@ -148,4 +148,4 @@ function interlinks_manager_register_post_meta() {
 	);
 }
 
-add_action( 'init', 'interlinks_manager_register_post_meta', 100000 );
+add_action( 'init', 'daextinma_register_post_meta', 100000 );

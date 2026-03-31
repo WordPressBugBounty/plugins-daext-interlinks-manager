@@ -76,6 +76,7 @@ const Chart = (props) => {
                             onClick={props.handleSortingChanges}
                             value={'url'}
                             data-icon={handleDataIcon('url')}
+                            title={__('The URL of the page.', 'daext-interlinks-manager')}
                         >{__('URL', 'daext-interlinks-manager')}</button>
                     </th>
                     <th>
@@ -84,7 +85,8 @@ const Chart = (props) => {
                             onClick={props.handleSortingChanges}
                             value={'iil'}
                             data-icon={handleDataIcon('iil')}
-                        >{__('Internal Inbound Links', 'daext-interlinks-manager')}</button>
+                            title={__('The number of internal links pointing to the URL.', 'daext-interlinks-manager')}
+                        >{__('Inbound Links', 'daext-interlinks-manager')}</button>
                     </th>
                     <th>
                         <button
@@ -92,6 +94,7 @@ const Chart = (props) => {
                             onClick={props.handleSortingChanges}
                             value={'juice'}
                             data-icon={handleDataIcon('juice')}
+                            title={__('The amount of link equity that the URL has, based on the number and quality of internal links pointing to it.', 'daext-interlinks-manager')}
                         >{__('Link Equity', 'daext-interlinks-manager')}</button>
                     </th>
 
