@@ -36,7 +36,7 @@ class Daextinma_Shared {
 		add_action( 'daextinma_cron_hook', array( $this, 'daextinma_cron_exec' ) );
 
 		$this->data['slug'] = 'daextinma';
-		$this->data['ver']  = '1.18';
+		$this->data['ver']  = '1.19';
 		$this->data['dir']  = substr( plugin_dir_path( __FILE__ ), 0, -7 );
 		$this->data['url']  = substr( plugin_dir_url( __FILE__ ), 0, -7 );
 
@@ -2616,6 +2616,35 @@ class Daextinma_Shared {
 		if ( intval( $count, 10 ) === 0 ) {
 			wp_clear_scheduled_hook( 'daextinma_cron_hook' );
 		}
+	}
+
+	/**
+	 * Display the migration notice.
+	 *
+	 * @return void
+	 */
+	public function display_migration_notice() {
+
+		?>
+		<div class="daextinma-migration-notice">
+
+			<h2><?php esc_html_e( 'Migration Notice', 'daext-interlinks-manager' ); ?></h2>
+
+			<p>
+				<?php esc_html_e( 'Interlinks Manager has been superseded by', 'daext-interlinks-manager' ); ?> <a href="https://wordpress.org/plugins/daext-autolinks-manager/" target="_blank"><?php esc_html_e( 'Link Manager', 'daext-interlinks-manager' ); ?></a><?php esc_html_e( ', a broader plugin for managing links in WordPress. Link Manager includes all the features of Interlinks Manager, along with additional capabilities.', 'daext-interlinks-manager' ); ?>
+			</p>
+
+			<p>
+				<?php esc_html_e( 'Interlinks Manager will continue to receive maintenance updates for compatibility and security until July 8, 2027, after which it will be removed from the WordPress.org plugin repository. All further feature development will take place in Link Manager.', 'daext-interlinks-manager' ); ?>
+			</p>
+
+			<p>
+				<?php esc_html_e( 'Migrating from the free version of Interlinks Manager to the free version of Link Manager does not require any migration procedure. Install and activate Link Manager, then deactivate Interlinks Manager.', 'daext-interlinks-manager' ); ?>
+			</p>
+
+		</div>
+		<?php
+
 	}
 
 }

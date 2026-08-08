@@ -200,12 +200,6 @@ class DAEXT_Notices_Manager {
 
 		add_action( 'current_screen', array( $this, 'track_settings_visit' ) );
 
-		/**
-		 * Render plugin notices in a custom location, immediately after the Interlinks Manager admin toolbar, instead
-		 * of relying on the generic WordPress admin_notices area.
-		 */
-		add_action( 'daextpnm_after_header_bar', array( $this, 'print_notices' ) );
-
 		add_action( 'wp_ajax_daext_notice_action_' . $this->plugin_prefix, array( $this, 'handle_ajax' ) );
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );

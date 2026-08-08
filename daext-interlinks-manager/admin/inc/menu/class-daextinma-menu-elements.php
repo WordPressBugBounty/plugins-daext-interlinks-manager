@@ -406,6 +406,9 @@ class Daextinma_Menu_Elements {
 		// Allow the PluginNoticesManager class to add a notice below the header bar when needed.
 		do_action( 'daextpnm_after_header_bar' );
 
+		// Display the migration notice.
+		$this->shared->display_migration_notice();
+
 		// Custom body content defined in the menu child class.
 		$this->display_custom_content();
 

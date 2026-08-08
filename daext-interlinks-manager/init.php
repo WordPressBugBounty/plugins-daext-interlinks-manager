@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Interlinks Manager
  * Description: Manages the internal links of your WordPress website. (Lite Version)
- * Version: 1.18
+ * Version: 1.19
  * Author: DAEXT
  * Author URI: https://daext.com
  * Text Domain: daext-interlinks-manager
@@ -39,7 +39,7 @@ require_once __DIR__ . '/inc/daext-notices-manager/class-daext-notices-manager.p
 DAEXT_Notices_Manager::get_instance( [
 	'plugin_slug'        => 'daext-interlinks-manager',
 	'plugin_file'        => __FILE__,
-	'docs_url'           => 'https://daext.com/kb/interlinks-manager/interlinks-manager-introduction/',
+	'docs_url'           => 'https://daext.com/kb/link-manager/quick-start-guide/',
 	'review_url'         => 'https://wordpress.org/support/plugin/daext-interlinks-manager/reviews/#new-post',
 	'plugin_prefix'      => 'daextinma',
 	'settings_screen_id' => 'interlinks_page_daextinma-options',

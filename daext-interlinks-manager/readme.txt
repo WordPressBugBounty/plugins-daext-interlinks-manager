@@ -3,15 +3,26 @@ Contributors: DAEXT
 Tags: internal linking, link building, seo, orphan content, links
 Donate link: https://daext.com
 Requires at least: 4.6
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 5.3
-Stable tag: 1.18
+Stable tag: 1.19
 License: GPLv3
 
 Interlinks Manager is an SEO WordPress plugin that gives you the ability to monitor and optimize your internal links.
 
 == Description ==
-[Interlinks Manager](https://daext.com/interlinks-manager/) is an SEO WordPress plugin that gives you the ability to monitor and optimize your internal links.
+
+## Important Notice
+
+Interlinks Manager has been superseded by [Link Manager](https://wordpress.org/plugins/daext-autolinks-manager/), a broader plugin for managing links in WordPress. Link Manager includes all the features of Interlinks Manager, along with additional capabilities.
+
+Interlinks Manager will continue to receive maintenance updates for compatibility and security until July 8, 2027, after which it will be removed from the WordPress.org plugin repository. All further feature development will take place in Link Manager.
+
+Migrating from the free version of Interlinks Manager to the free version of Link Manager does not require any migration procedure. Install and activate Link Manager, then deactivate Interlinks Manager.
+
+## About Interlinks Manager
+
+Interlinks Manager is an SEO WordPress plugin that gives you the ability to monitor and optimize your internal links.
 
 This plugin first generates the internal links data using PHP regular expressions applied to your content and then analyzes the resulting data to provide valuable information.
 
@@ -24,7 +35,7 @@ Specifically, the plugin adds to WordPress the following features:
 
 ## Pro Version
 
-A [Pro Version](https://daext.com/interlinks-manager/) is also available with additional features, including:
+A [Pro Version](https://daext.com/link-manager/) is also available with additional features, including:
 
 * An internal link suggestions feature to receive relevant suggestions and assist with your internal linking workflow.
 * A system to automatically create internal links based on specified keywords.
@@ -102,7 +113,7 @@ Internal links data can also be exported in CSV format for further analysis or t
 
 Use the information provided by the plugin in the dedicated menus to improve the internal links of your website, the distribution of link equity, and correct errors. While editing your page, you can use the Internal Links Optimization panel to receive real-time information about the optimization of the article you are working on.
 
-For detailed guidance and advanced configuration, visit the [official Knowledge Base](https://daext.com/kb/interlinks-manager/).
+For detailed guidance and advanced configuration, visit the [official Knowledge Base](https://daext.com/kb/link-manager/).
 
 == Frequently Asked Questions ==
 
@@ -111,6 +122,14 @@ For detailed guidance and advanced configuration, visit the [official Knowledge 
 The plugin works with the Gutenberg editor. However, it might not find all the internal links with page builders that don't save the post HTML in the **[prefix]_posts** database table.
 
 == Changelog ==
+
+= 1.19 =
+
+*Aug 8, 2026*
+
+* Added a migration notice to inform users about Link Manager, the plugin that supersedes Interlinks Manager.
+* The doc notice and the review notice are no longer displayed in the plugin menu pages.
+* Update the link to the official Knowledge Base.
 
 = 1.18 =
 

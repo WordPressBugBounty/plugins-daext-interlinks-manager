@@ -819,7 +819,7 @@ class Daextinma_Admin {
 			esc_html__( 'Documentation', 'daext-interlinks-manager' ),
 			esc_html__( 'Documentation', 'daext-interlinks-manager' ) . '<i class="dashicons dashicons-external" style="font-size:12px;vertical-align:-2px;height:10px;"></i>',
 			'edit_posts',
-			'https://daext.com/kb/interlinks-manager/',
+			'https://daext.com/kb/link-manager/',
 		);
 	}
 
