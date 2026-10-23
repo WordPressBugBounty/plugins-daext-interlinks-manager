@@ -33,14 +33,7 @@ Specifically, the plugin adds to WordPress the following features:
 * An algorithm that evaluates the internal links optimization status
 * HTTP status code analysis to detect internal links that lead to broken pages, redirects, and other problematic responses
 
-## Pro Version
-
-A [Pro Version](https://daext.com/link-manager/) is also available with additional features, including:
-
-* An internal link suggestions feature to receive relevant suggestions and assist with your internal linking workflow.
-* A system to automatically create internal links based on specified keywords.
-* A report of all visits generated from clicks on internal links.
-* The ability to import and export plugin data and settings to back up configurations or quickly set up the plugin on multiple websites.
+[Link Manager](https://wordpress.org/plugins/daext-autolinks-manager/) is the successor to Interlinks Manager and provides a broader set of tools for managing and optimizing links in WordPress. We also offer [Link Manager Pro](https://daext.com/link-manager/) with advanced features to find broken links, track clicks, get full link analytics with internal links breakdown and domain reporting, receive internal link suggestions, bulk create links automatically, and more.
 
 ## Monitor your internal links
 
